@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login App</title>
+</head>
+<body>
+
+  <h1>Login</h1>
+
+  <input id="username" placeholder="Username">
+  <br><br>
+
+  <input id="password" type="password" placeholder="Password">
+  <br><br>
+
+  <button onclick="login()">Login</button>
+
+  
+<script>
+
+async function login() {
+
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  const response = await fetch("http://localhost:3000/login", {
+
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json"
+    },
+
+    body: JSON.stringify({
+      username,
+      password
+    })
+
+  });
+
+  const data = await response.json();
+
+  console.log(data);
+
+  localStorage.setItem("token", data.token);
+
+  alert("Logged in!");
+
+  loadDashboard();
+
+}
+
+async function loadDashboard() {
+
+  const token = localStorage.getItem("token");
+
+  const response = await fetch("http://localhost:3000/dashboard", {
+
+    headers: {
+      authorization: token
+    }
+
+  });
+
+  const data = await response.json();
+
+  console.log(data);
+
+  document.body.innerHTML += `
+    <h2>${data.message}</h2>
+  `;
+
+}
+
+</script>
+    
