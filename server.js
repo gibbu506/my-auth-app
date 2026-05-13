@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
@@ -12,9 +15,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 /* DATABASE CONNECTION */
-mongoose.connect("mongodb+srv://gabrielkubai506_db_user:3560@cluster0.mrap3lj.mongodb.net/?appName=Cluster0"
-
-)
+mongoose.connect(process.env.MONGO_URI)
 
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log(err));
