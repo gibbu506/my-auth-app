@@ -3,14 +3,19 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(express.static(__dirname));
 
 /* DATABASE CONNECTION */
-mongoose.connect("mongodb://127.0.0.1:27017/myapi")
+mongoose.connect("mongodb+srv://gabrielkubai506_db_user:3560@cluster0.mrap3lj.mongodb.net/?appName=Cluster0"
+
+)
+
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log(err));
 
@@ -74,11 +79,14 @@ app.post("/login", async (req, res) => {
 
 /* HOME ROUTE */
 app.get("/", (req, res) => {
-  res.send("Auth server running 🚀");
+  res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 function verifyToken(req, res, next) {
@@ -116,3 +124,6 @@ app.get("/dashboard", verifyToken, (req, res) => {
   });
 
 });
+
+
+
