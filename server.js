@@ -68,13 +68,12 @@ app.post("/login", async (req, res) => {
 
   const token = jwt.sign(
   { id: user._id },
-  process.env.JWT_SECRET
+   process.env.JWT_SECRET
 );
-  
-  res.json({
-    message: "Login successful",
-    token: token
-  });
+res.json({
+  message: "Login successful",
+  token: token
+});
 });
 
 /* HOME ROUTE */
@@ -101,7 +100,8 @@ function verifyToken(req, res, next) {
 
   try {
 
-    const verified = jwt.verify(token, "SECRETKEY");
+    const verified = jwt.verify(token,
+       process.env.JWT_SECRET);
 
     req.user = verified;
 
