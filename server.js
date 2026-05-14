@@ -67,10 +67,10 @@ app.post("/login", async (req, res) => {
   }
 
   const token = jwt.sign(
-    { id: user._id },
-    "SECRETKEY"
-  );
-
+  { id: user._id },
+  process.env.JWT_SECRET
+);
+  
   res.json({
     message: "Login successful",
     token: token
