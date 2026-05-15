@@ -57,7 +57,7 @@ async function loadDashboard() {
   const response = await fetch("http://localhost:3000/dashboard", {
 
     headers: {
-      authorization: token
+       authorization: `Bearer ${token}
     }
 
   });

@@ -68,7 +68,7 @@ app.post("/login", async (req, res) => {
 
   const token = jwt.sign(
   { id: user._id },
-   process.env.JWT_SECRET
+   "abc123"
 );
 res.json({
   message: "Login successful",
@@ -100,8 +100,8 @@ function verifyToken(req, res, next) {
 
   try {
 
-    const verified = jwt.verify(token,
-       process.env.JWT_SECRET);
+    const verified = jwt.verify(token,"abc123"
+       );
 
     req.user = verified;
 
