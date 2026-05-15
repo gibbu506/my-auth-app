@@ -1,76 +1,391 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Login App</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Auth</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #222222;
+      --accent: #c8f55a;
+      --accent-dim: rgba(200, 245, 90, 0.12);
+      --text: #f0f0f0;
+      --muted: #666;
+      --error: #ff5f5f;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(200,245,90,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200,245,90,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glow blob */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(200,245,90,0.07) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.5px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 32px;
+      border: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    /* Forms */
+    .form { display: none; flex-direction: column; gap: 16px; }
+    .form.active { display: flex; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 24px;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+
+    .form-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 13px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(200, 245, 90, 0.08);
+    }
+
+    input::placeholder { color: #333; }
+
+    .btn {
+      padding: 14px;
+      background: var(--accent);
+      color: #0a0a0a;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: opacity 0.2s, transform 0.15s;
+      letter-spacing: 0.2px;
+    }
+
+    .btn:hover  { opacity: 0.88; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .msg {
+      font-size: 13px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .msg.success { background: rgba(200,245,90,0.1); color: var(--accent); border: 1px solid rgba(200,245,90,0.2); display: block; }
+    .msg.error   { background: rgba(255,95,95,0.1);  color: var(--error);  border: 1px solid rgba(255,95,95,0.2);  display: block; }
+
+    .footer-text {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 20px;
+    }
+
+    .footer-text span {
+      color: var(--accent);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .footer-text span:hover { text-decoration: underline; }
+  </style>
 </head>
 <body>
 
-  <h1>Login</h1>
+<div class="card">
 
-  <input id="username" placeholder="Username">
-  <br><br>
+  <div class="logo">
+    <span class="logo-dot"></span> YourApp
+  </div>
 
-  <input id="password" type="password" placeholder="Password">
-  <br><br>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('login')">Login</button>
+    <button class="tab"        onclick="switchTab('signup')">Sign Up</button>
+  </div>
 
-  <button onclick="login()">Login</button>
+  <!-- LOGIN FORM -->
+  <div class="form active" id="loginForm">
+    <div>
+      <div class="form-title">Welcome back</div>
+      <div class="form-subtitle">Enter your credentials to continue</div>
+    </div>
 
-  
+    <div id="loginMsg" class="msg"></div>
+
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="loginUsername" placeholder="yourname" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" />
+    </div>
+
+    <button class="btn" onclick="login()">Login</button>
+
+    <p class="footer-text">No account? <span onclick="switchTab('signup')">Sign up</span></p>
+  </div>
+
+  <!-- SIGNUP FORM -->
+  <div class="form" id="signupForm">
+    <div>
+      <div class="form-title">Create account</div>
+      <div class="form-subtitle">Fill in your details to get started</div>
+    </div>
+
+    <div id="signupMsg" class="msg"></div>
+
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="signupUsername" placeholder="yourname" />
+    </div>
+    <div class="field">
+      <label>Email <span style="color:#333;font-weight:300">(optional)</span></label>
+      <input type="email" id="signupEmail" placeholder="you@email.com" />
+    </div>
+    <div class="field">
+      <label>Phone <span style="color:#333;font-weight:300">(optional)</span></label>
+      <input type="tel" id="signupPhone" placeholder="+254 7XX XXX XXX" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="signupPassword" placeholder="••••••••" />
+    </div>
+
+    <button class="btn" onclick="signup()">Create Account</button>
+
+    <p class="footer-text">Already have an account? <span onclick="switchTab('login')">Login</span></p>
+  </div>
+
+</div>
+
 <script>
+  const API = "http://localhost:3000";
 
-async function login() {
+  function switchTab(tab) {
+    const tabs = document.querySelectorAll(".tab");
+    const forms = document.querySelectorAll(".form");
 
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+    tabs.forEach((t, i) => t.classList.toggle("active", (tab === "login" ? 0 : 1) === i));
+    document.getElementById("loginForm").classList.toggle("active", tab === "login");
+    document.getElementById("signupForm").classList.toggle("active", tab === "signup");
 
-  const response = await fetch("http://localhost:3000/login", {
+    // Clear messages on switch
+    showMsg("loginMsg", "", "");
+    showMsg("signupMsg", "", "");
+  }
 
-    method: "POST",
+  function showMsg(id, text, type) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = "msg " + (text ? type : "");
+  }
 
-    headers: {
-      "Content-Type": "application/json"
-    },
+  async function login() {
+    const username = document.getElementById("loginUsername").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    const btn = document.querySelector("#loginForm .btn");
 
-    body: JSON.stringify({
-      username,
-      password
-    })
+    if (!username || !password) return showMsg("loginMsg", "Please fill in all fields.", "error");
 
-  });
+    btn.disabled = true;
+    btn.textContent = "Logging in...";
 
-  const data = await response.json();
+    try {
+      const res  = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
 
-  console.log(data);
+      const data = await res.json();
 
-  localStorage.setItem("token", data.token);
+      if (!res.ok) {
+        showMsg("loginMsg", data.message || "Login failed.", "error");
+      } else {
+        localStorage.setItem("token", data.token);
+        showMsg("loginMsg", "Login successful! Redirecting...", "success");
+        setTimeout(() => window.location.href = "/dashboard.html", 1000);
+      }
 
-  alert("Logged in!");
-
-  loadDashboard();
-
-}
-
-async function loadDashboard() {
-
-  const token = localStorage.getItem("token");
-
-  const response = await fetch("http://localhost:3000/dashboard", {
-
-    headers: {
-       authorization: `Bearer ${token}
+    } catch (err) {
+      showMsg("loginMsg", "Server error. Is your backend running?", "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Login";
     }
+  }
 
-  });
+  async function signup() {
+    const username = document.getElementById("signupUsername").value.trim();
+    const email    = document.getElementById("signupEmail").value.trim();
+    const phone    = document.getElementById("signupPhone").value.trim();
+    const password = document.getElementById("signupPassword").value;
+    const btn = document.querySelector("#signupForm .btn");
 
-  const data = await response.json();
+    if (!username || !password) return showMsg("signupMsg", "Username and password are required.", "error");
 
-  console.log(data);
+    btn.disabled = true;
+    btn.textContent = "Creating account...";
 
-  document.body.innerHTML += `
-    <h2>${data.message}</h2>
-  `;
+    try {
+      const res  = await fetch(`${API}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, phone, password })
+      });
 
-}
+      const data = await res.json();
 
+      if (!res.ok) {
+        showMsg("signupMsg", data.message || "Registration failed.", "error");
+      } else {
+        showMsg("signupMsg", "Account created! Switching to login...", "success");
+        setTimeout(() => switchTab("login"), 1500);
+      }
+
+    } catch (err) {
+      showMsg("signupMsg", "Server error. Is your backend running?", "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Create Account";
+    }
+  }
 </script>
-    
+
+</body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #161616;
+      --border: #222222;
+      --accent: #c8f55a;
+      --accent-dim: rgba(200, 245, 90, 0.1);
+      --text: #f0f0f0;
+      --muted: #555;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(200,245,90,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200,245,90,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* NAVBAR */
+    nav {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.8);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-dot {
+      width: 9px;
+      height: 9px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-username {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .nav-username span {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .btn-logout {
+      padding: 8px 18px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover {
+      border-color: #ff5f5f;
+      color: #ff5f5f;
+    }
+
+    /* MAIN */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 40px;
+      animation: fadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* LOADING */
+    #loadingState {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* CONTENT */
+    #dashContent { display: none; }
+
+    .greeting {
+      margin-bottom: 40px;
+    }
+
+    .greeting-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .greeting-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .greeting-name span { color: var(--accent); }
+
+    /* CARDS GRID */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover { border-color: #333; }
+
+    .card-label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+
+    .card-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      word-break: break-all;
+    }
+
+    .card-value.muted { color: var(--muted); font-size: 16px; font-weight: 400; font-family: 'DM Sans', sans-serif; }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-dim);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 18px;
+    }
+
+    /* TOKEN SECTION */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .badge {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 8px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-radius: 99px;
+      border: 1px solid rgba(200,245,90,0.2);
+    }
+
+    .token-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .token-text {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    .btn-copy {
+      padding: 7px 14px;
+      background: var(--accent-dim);
+      border: 1px solid rgba(200,245,90,0.2);
+      border-radius: 7px;
+      color: var(--accent);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .btn-copy:hover { background: rgba(200,245,90,0.18); }
+
+    /* Status dot */
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 24px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    @media (max-width: 640px) {
+      nav  { padding: 16px 20px; }
+      main { padding: 40px 20px; }
+      .cards { grid-template-columns: 1fr; }
+      .greeting-name { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="logo"><span class="logo-dot"></span> YourApp</div>
+  <div class="nav-right">
+    <div class="nav-username">Logged in as <span id="navUsername">—</span></div>
+    <button class="btn-logout" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- LOADING -->
+  <div id="loadingState">
+    <div class="spinner"></div>
+    <span>Verifying session...</span>
+  </div>
+
+  <!-- DASHBOARD CONTENT -->
+  <div id="dashContent">
+
+    <div class="greeting">
+      <div class="greeting-label">Good to see you</div>
+      <div class="greeting-name">Hey, <span id="displayName">—</span> 👋</div>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">👤</div>
+        <div class="card-label">Username</div>
+        <div class="card-value" id="cardUsername">—</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">✉️</div>
+        <div class="card-label">Email</div>
+        <div class="card-value" id="cardEmail">—</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📱</div>
+        <div class="card-label">Phone</div>
+        <div class="card-value" id="cardPhone">—</div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      Session Token <span class="badge">JWT</span>
+    </div>
+
+    <div class="token-box">
+      <div class="token-text" id="tokenDisplay">—</div>
+      <button class="btn-copy" onclick="copyToken()">Copy</button>
+    </div>
+
+    <div class="status">
+      <div class="status-dot"></div>
+      Session active
+    </div>
+
+  </div>
+</main>
+
+<script>
+  const API = "http://localhost:3000";
+
+  async function loadDashboard() {
+    const token = localStorage.getItem("token");
+
+    // No token → kick to login
+    if (!token) return window.location.href = "/index.html";
+
+    try {
+      const res  = await fetch(`${API}/dashboard`, {
+        headers: { authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        // Token invalid or expired
+        localStorage.removeItem("token");
+        return window.location.href = "/index.html";
+      }
+
+      const data = await res.json();
+
+      // Populate UI
+      const username = data.user?.username || "User";
+      document.getElementById("navUsername").textContent   = username;
+      document.getElementById("displayName").textContent   = username;
+      document.getElementById("cardUsername").textContent  = username;
+
+      // Email & phone — show dash if not set
+      const email = data.user?.email;
+      const phone = data.user?.phone;
+      const emailEl = document.getElementById("cardEmail");
+      const phoneEl = document.getElementById("cardPhone");
+
+      if (email) { emailEl.textContent = email; }
+      else { emailEl.textContent = "Not set"; emailEl.classList.add("muted"); }
+
+      if (phone) { phoneEl.textContent = phone; }
+      else { phoneEl.textContent = "Not set"; phoneEl.classList.add("muted"); }
+
+      // Token preview
+      document.getElementById("tokenDisplay").textContent = token;
+
+      // Show content
+      document.getElementById("loadingState").style.display = "none";
+      document.getElementById("dashContent").style.display  = "block";
+
+    } catch (err) {
+      // Server down
+      document.getElementById("loadingState").innerHTML =
+        `<div style="color:#ff5f5f;font-size:14px;">⚠️ Could not reach server. Is your backend running?</div>`;
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "/index.html";
+  }
+
+  function copyToken() {
+    const token = localStorage.getItem("token");
+    navigator.clipboard.writeText(token).then(() => {
+      const btn = document.querySelector(".btn-copy");
+      btn.textContent = "Copied!";
+      setTimeout(() => btn.textContent = "Copy", 2000);
+    });
+  }
+
+  loadDashboard();
+</script>
+
+</body>
+</html>
