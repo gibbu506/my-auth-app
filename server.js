@@ -68,8 +68,11 @@ app.post("/login", async (req, res) => {
 
   const token = jwt.sign(
   { id: user._id },
-   "abc123"
+   process.env.JWT_SECRET,
+   { expiresIn: "1d" }
+
 );
+
 res.json({
   message: "Login successful",
   token: token
@@ -87,10 +90,10 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
+c
 function verifyToken(req, res, next) {
 
-  const token = req.headers.authorization;
+  const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({
@@ -100,8 +103,8 @@ function verifyToken(req, res, next) {
 
   try {
 
-    const verified = jwt.verify(token,"abc123"
-       );
+    const verified = jwt.verify(token,process.env.JWT_SECRET
+);
 
     req.user = verified;
 
@@ -125,5 +128,36 @@ app.get("/dashboard", verifyToken, (req, res) => {
 
 });
 
+/* PRODUCT MODEL */
+const Product = mongoose.model("Product", {
+  name:        { type: String, required: true },
+  description: { type: String },
+  price:       { type: Number, required: true },
+  image:       { type: String }, // URL to image
+  createdAt:   { type: Date, default: Date.now }
+});
 
+/* GET ALL PRODUCTS — public */
+app.get("/products", async (req, res) => {
+  const products = await Product.find().sort({ createdAt: -1 });
+  res.json(products);
+});
+
+/* ADD PRODUCT — protected (must be logged in) */
+app.post("/products", verifyToken, async (req, res) => {
+  const product = new Product({
+    name:        req.body.name,
+    description: req.body.description,
+    price:       req.body.price,
+    image:       req.body.image
+  });
+  await product.save();
+  res.json({ message: "Product added", product });
+});
+
+/* DELETE PRODUCT — protected */
+app.delete("/products/:id", verifyToken, async (req, res) => {
+  await Product.findByIdAndDelete(req.params.id);
+  res.json({ message: "Product deleted" });
+});
 

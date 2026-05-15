@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Products</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --border: #222222;
+      --accent: #c8f55a;
+      --accent-dim: rgba(200,245,90,0.1);
+      --text: #f0f0f0;
+      --muted: #555;
+      --radius: 14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(200,245,90,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200,245,90,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    nav {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-dot { width: 9px; height: 9px; background: var(--accent); border-radius: 50%; }
+
+    .nav-links { display: flex; gap: 12px; }
+
+    .nav-link {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      color: var(--muted);
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover { color: var(--text); border-color: var(--border); }
+    .nav-link.active { color: var(--accent); border-color: rgba(200,245,90,0.3); background: var(--accent-dim); }
+
+    .btn-logout {
+      padding: 8px 18px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover { border-color: #ff5f5f; color: #ff5f5f; }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 40px;
+      animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* HERO */
+    .hero {
+      margin-bottom: 60px;
+      text-align: center;
+    }
+
+    .hero-label {
+      display: inline-block;
+      font-size: 11px;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 600;
+      border: 1px solid rgba(200,245,90,0.3);
+      background: var(--accent-dim);
+      padding: 5px 14px;
+      border-radius: 99px;
+      margin-bottom: 20px;
+    }
+
+    .hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 52px;
+      font-weight: 800;
+      letter-spacing: -2px;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .hero-title span { color: var(--accent); }
+
+    .hero-sub {
+      font-size: 15px;
+      color: var(--muted);
+      max-width: 400px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* SEARCH */
+    .search-wrap {
+      max-width: 420px;
+      margin: 32px auto 0;
+      position: relative;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 13px 20px 13px 46px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-wrap input:focus { border-color: var(--accent); }
+    .search-wrap input::placeholder { color: #333; }
+
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 16px;
+      pointer-events: none;
+    }
+
+    /* GRID */
+    #loadingProducts {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 80px 20px;
+    }
+
+    .spinner {
+      width: 28px; height: 28px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 14px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      border-color: #2a2a2a;
+    }
+
+    .card-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: #0d0d0d;
+      display: block;
+    }
+
+    .card-img-placeholder {
+      width: 100%;
+      height: 180px;
+      background: #0d0d0d;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-body { padding: 20px; }
+
+    .card-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 18px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+
+    .btn-buy {
+      padding: 9px 20px;
+      background: var(--accent);
+      color: #0a0a0a;
+      border: none;
+      border-radius: 99px;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .btn-buy:hover { opacity: 0.85; transform: scale(1.03); }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 80px 20px;
+      grid-column: 1 / -1;
+    }
+
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+    /* Result count */
+    .result-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 640px) {
+      nav { padding: 16px 20px; }
+      main { padding: 40px 20px; }
+      .hero-title { font-size: 34px; }
+      .product-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="logo-dot"></span> YourApp</div>
+  <div class="nav-links">
+    <a href="/dashboard.html" class="nav-link">Dashboard</a>
+    <a href="/products.html" class="nav-link active">Products</a>
+    <a href="/admin.html" class="nav-link">Admin</a>
+  </div>
+  <button class="btn-logout" onclick="logout()">Logout</button>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="hero-label">Store</div>
+    <div class="hero-title">Our <span>Products</span></div>
+    <div class="hero-sub">Browse everything we have. Fresh inventory, updated in real time.</div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Search products..." oninput="filterProducts()"/>
+    </div>
+  </div>
+
+  <div id="resultLabel" class="result-label"></div>
+
+  <div id="loadingProducts">
+    <div class="spinner"></div>
+    Loading products...
+  </div>
+
+  <div class="product-grid" id="productGrid"></div>
+</main>
+
+<script>
+  const API = "https://my-auth-app-23h6.onrender.com";
+  let allProducts = [];
+
+  function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "/index.html";
+  }
+
+  async function loadProducts() {
+    try {
+      const res      = await fetch(`${API}/products`);
+      allProducts    = await res.json();
+
+      document.getElementById("loadingProducts").style.display = "none";
+      renderProducts(allProducts);
+
+    } catch (err) {
+      document.getElementById("loadingProducts").innerHTML =
+        `<div style="color:#ff5f5f;font-size:14px;">⚠️ Could not load products.</div>`;
+    }
+  }
+
+  function renderProducts(products) {
+    const grid = document.getElementById("productGrid");
+    const label = document.getElementById("resultLabel");
+    grid.innerHTML = "";
+
+    label.textContent = products.length > 0
+      ? `Showing ${products.length} product${products.length !== 1 ? "s" : ""}`
+      : "";
+
+    if (products.length === 0) {
+      grid.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">🛍️</div>
+          No products found.
+        </div>`;
+      return;
+    }
+
+    products.forEach((p, i) => {
+      const card = document.createElement("div");
+      card.className = "product-card";
+      card.style.animationDelay = `${i * 0.06}s`;
+      card.innerHTML = `
+        ${p.image
+          ? `<img class="card-img" src="${p.image}" alt="${p.name}" onerror="this.outerHTML='<div class=\\'card-img-placeholder\\'>📦</div>'">`
+          : `<div class="card-img-placeholder">📦</div>`}
+        <div class="card-body">
+          <div class="card-name">${p.name}</div>
+          <div class="card-desc">${p.description || "No description available."}</div>
+          <div class="card-footer">
+            <div class="card-price">$${Number(p.price).toFixed(2)}</div>
+            <button class="btn-buy" onclick="alert('Coming soon!')">Buy Now</button>
+          </div>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function filterProducts() {
+    const query = document.getElementById("searchInput").value.toLowerCase();
+    const filtered = allProducts.filter(p =>
+      p.name.toLowerCase().includes(query) ||
+      (p.description && p.description.toLowerCase().includes(query))
+    );
+    renderProducts(filtered);
+  }
+
+  loadProducts();
+</script>
+
+</body>
+</html>

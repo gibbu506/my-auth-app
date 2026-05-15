@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Products</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #161616;
+      --border: #222222;
+      --accent: #c8f55a;
+      --accent-dim: rgba(200,245,90,0.1);
+      --text: #f0f0f0;
+      --muted: #555;
+      --error: #ff5f5f;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(200,245,90,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200,245,90,0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    nav {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-dot { width: 9px; height: 9px; background: var(--accent); border-radius: 50%; }
+
+    .nav-links { display: flex; gap: 12px; }
+
+    .nav-link {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      color: var(--muted);
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover { color: var(--text); border-color: var(--border); }
+    .nav-link.active { color: var(--accent); border-color: rgba(200,245,90,0.3); background: var(--accent-dim); }
+
+    .btn-logout {
+      padding: 8px 18px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { border-color: var(--error); color: var(--error); }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 50px 40px;
+      animation: fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .page-title span { color: var(--accent); }
+
+    .product-count {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* ADD FORM */
+    .add-form {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      margin-bottom: 40px;
+    }
+
+    .form-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 500;
+    }
+
+    input, textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      resize: none;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(200,245,90,0.08);
+    }
+
+    input::placeholder, textarea::placeholder { color: #333; }
+
+    .btn-add {
+      margin-top: 18px;
+      padding: 13px 28px;
+      background: var(--accent);
+      color: #0a0a0a;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .btn-add:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-add:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    .msg {
+      margin-top: 14px;
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .msg.success { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,245,90,0.2); display: block; }
+    .msg.error   { background: rgba(255,95,95,0.1); color: var(--error); border: 1px solid rgba(255,95,95,0.2); display: block; }
+
+    /* PRODUCTS LIST */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    #loadingProducts {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 40px;
+    }
+
+    .spinner {
+      width: 24px; height: 24px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .product-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .product-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      transition: border-color 0.2s;
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .product-row:hover { border-color: #2a2a2a; }
+
+    .product-img {
+      width: 54px;
+      height: 54px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .product-img-placeholder {
+      width: 54px;
+      height: 54px;
+      border-radius: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .product-info { flex: 1; min-width: 0; }
+
+    .product-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-desc {
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .product-price {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .btn-delete {
+      padding: 8px 16px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-delete:hover { border-color: var(--error); color: var(--error); }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 60px 20px;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+    }
+
+    .empty-icon { font-size: 36px; margin-bottom: 12px; }
+
+    @media (max-width: 640px) {
+      nav { padding: 16px 20px; }
+      main { padding: 30px 20px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo"><span class="logo-dot"></span> YourApp</div>
+  <div class="nav-links">
+    <a href="/dashboard.html" class="nav-link">Dashboard</a>
+    <a href="/products.html" class="nav-link">Products</a>
+    <a href="/admin.html" class="nav-link active">Admin</a>
+  </div>
+  <button class="btn-logout" onclick="logout()">Logout</button>
+</nav>
+
+<main>
+  <div class="page-header">
+    <div>
+      <div class="page-title">Product <span>Admin</span></div>
+      <div class="product-count" id="productCount">Loading products...</div>
+    </div>
+  </div>
+
+  <!-- ADD FORM -->
+  <div class="add-form">
+    <div class="form-title">➕ Add New Product</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Product Name</label>
+        <input type="text" id="prodName" placeholder="e.g. Wireless Headphones"/>
+      </div>
+      <div class="field">
+        <label>Price ($)</label>
+        <input type="number" id="prodPrice" placeholder="e.g. 49.99" min="0" step="0.01"/>
+      </div>
+      <div class="field full">
+        <label>Description</label>
+        <textarea id="prodDesc" rows="2" placeholder="Short product description..."></textarea>
+      </div>
+      <div class="field full">
+        <label>Image URL (optional)</label>
+        <input type="url" id="prodImage" placeholder="https://example.com/image.jpg"/>
+      </div>
+    </div>
+    <button class="btn-add" onclick="addProduct()">Add Product</button>
+    <div id="addMsg" class="msg"></div>
+  </div>
+
+  <!-- PRODUCTS LIST -->
+  <div class="section-title">All Products</div>
+  <div id="loadingProducts">
+    <div class="spinner"></div>
+    Fetching products...
+  </div>
+  <div class="product-list" id="productList"></div>
+</main>
+
+<script>
+  const API = "https://my-auth-app-23h6.onrender.com";
+
+  function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "/index.html";
+  }
+
+  function showMsg(id, text, type) {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = "msg " + (text ? type : "");
+  }
+
+  async function loadProducts() {
+    try {
+      const res = await fetch(`${API}/products`);
+      const products = await res.json();
+
+      document.getElementById("loadingProducts").style.display = "none";
+      document.getElementById("productCount").textContent =
+        `${products.length} product${products.length !== 1 ? "s" : ""} total`;
+
+      const list = document.getElementById("productList");
+      list.innerHTML = "";
+
+      if (products.length === 0) {
+        list.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">📦</div>
+            No products yet. Add your first one above.
+          </div>`;
+        return;
+      }
+
+      products.forEach(p => {
+        const row = document.createElement("div");
+        row.className = "product-row";
+        row.id = `product-${p._id}`;
+        row.innerHTML = `
+          ${p.image
+            ? `<img class="product-img" src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">`
+            : `<div class="product-img-placeholder">📦</div>`}
+          <div class="product-info">
+            <div class="product-name">${p.name}</div>
+            <div class="product-desc">${p.description || "No description"}</div>
+          </div>
+          <div class="product-price">$${Number(p.price).toFixed(2)}</div>
+          <button class="btn-delete" onclick="deleteProduct('${p._id}')">Delete</button>
+        `;
+        list.appendChild(row);
+      });
+
+    } catch (err) {
+      document.getElementById("loadingProducts").innerHTML =
+        `<div style="color:var(--error);font-size:14px;">⚠️ Could not load products. Is your backend running?</div>`;
+    }
+  }
+
+  async function addProduct() {
+    const name  = document.getElementById("prodName").value.trim();
+    const price = document.getElementById("prodPrice").value;
+    const desc  = document.getElementById("prodDesc").value.trim();
+    const image = document.getElementById("prodImage").value.trim();
+    const token = localStorage.getItem("token");
+    const btn   = document.querySelector(".btn-add");
+
+    if (!name || !price) return showMsg("addMsg", "Name and price are required.", "error");
+    if (!token) return window.location.href = "/index.html";
+
+    btn.disabled = true;
+    btn.textContent = "Adding...";
+
+    try {
+      const res  = await fetch(`${API}/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ name, price: parseFloat(price), description: desc, image })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        showMsg("addMsg", data.message || "Failed to add product.", "error");
+      } else {
+        showMsg("addMsg", `"${name}" added successfully!`, "success");
+        // Clear form
+        document.getElementById("prodName").value  = "";
+        document.getElementById("prodPrice").value = "";
+        document.getElementById("prodDesc").value  = "";
+        document.getElementById("prodImage").value = "";
+        loadProducts();
+      }
+
+    } catch (err) {
+      showMsg("addMsg", "Server error.", "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Add Product";
+    }
+  }
+
+  async function deleteProduct(id) {
+    const token = localStorage.getItem("token");
+    if (!confirm("Delete this product?")) return;
+
+    try {
+      const res = await fetch(`${API}/products/${id}`, {
+        method: "DELETE",
+        headers: { "authorization": `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const row = document.getElementById(`product-${id}`);
+        row.style.opacity = "0";
+        row.style.transform = "translateX(20px)";
+        row.style.transition = "all 0.3s ease";
+        setTimeout(() => { row.remove(); loadProducts(); }, 300);
+      }
+
+    } catch (err) {
+      alert("Failed to delete product.");
+    }
+  }
+
+  // Check auth on load
+  if (!localStorage.getItem("token")) window.location.href = "/index.html";
+  loadProducts();
+</script>
+
+</body>
+</html>
