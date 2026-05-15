@@ -90,7 +90,7 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-c
+
 function verifyToken(req, res, next) {
 
   const token = req.headers.authorization?.split(" ")[1];
