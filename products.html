@@ -396,7 +396,7 @@
           <div class="card-name">${p.name}</div>
           <div class="card-desc">${p.description || "No description available."}</div>
           <div class="card-footer">
-            <div class="card-price">$${Number(p.price).toFixed(2)}</div>
+<div class="card-price">KSh ${Number(p.price).toFixed(0)}</div>
             <button class="btn-buy" onclick="buyProduct('${p.name}', ${p.price})">Buy Now</button>
         </div>
       `;

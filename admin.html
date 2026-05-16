@@ -440,7 +440,7 @@
             <div class="product-name">${p.name}</div>
             <div class="product-desc">${p.description || "No description"}</div>
           </div>
-          <div class="product-price">$${Number(p.price).toFixed(2)}</div>
+          <div class="card-price">KSh ${Number(p.price).toFixed(0)}</div>
           <button class="btn-delete" onclick="deleteProduct('${p._id}')">Delete</button>
         `;
         list.appendChild(row);
