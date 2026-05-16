@@ -1,3 +1,5 @@
+
+const fetch = require("node-fetch");
 require("dotenv").config();
 
 const express = require("express");
@@ -159,5 +161,83 @@ app.post("/products", verifyToken, async (req, res) => {
 app.delete("/products/:id", verifyToken, async (req, res) => {
   await Product.findByIdAndDelete(req.params.id);
   res.json({ message: "Product deleted" });
+});
+
+
+/* MPESA - GET ACCESS TOKEN */
+async function getMpesaToken() {
+  const auth = Buffer.from(
+    `${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`
+  ).toString("base64");
+
+  const res = await fetch(
+    "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+    { headers: { Authorization: `Basic ${auth}` } }
+  );
+
+  const data = await res.json();
+  return data.access_token;
+}
+
+/* MPESA - STK PUSH ROUTE */
+app.post("/mpesa/pay", verifyToken, async (req, res) => {
+  const { phone, amount, productName } = req.body;
+
+  try {
+    const token     = await getMpesaToken();
+    const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, "").slice(0, 14);
+    const password  = Buffer.from(
+      `${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`
+    ).toString("base64");
+
+    const stkRes = await fetch(
+      "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          BusinessShortCode: process.env.MPESA_SHORTCODE,
+          Password:          password,
+          Timestamp:         timestamp,
+          TransactionType:   "CustomerPayBillOnline",
+          Amount:            amount,
+          PartyA:            phone,       // customer phone e.g 2547XXXXXXXX
+          PartyB:            process.env.MPESA_SHORTCODE,
+          PhoneNumber:       phone,
+          CallBackURL:       process.env.MPESA_CALLBACK_URL,
+          AccountReference:  productName,
+          TransactionDesc:   `Payment for ${productName}`
+        })
+      }
+    );
+
+    const stkData = await stkRes.json();
+    res.json(stkData);
+
+  } catch (err) {
+    res.status(500).json({ message: "STK push failed", error: err.message });
+  }
+});
+
+/* MPESA - CALLBACK (Safaricom sends payment result here) */
+app.post("/mpesa/callback", (req, res) => {
+  const body = req.body.Body?.stkCallback;
+
+  if (body?.ResultCode === 0) {
+    // Payment successful
+    const amount = body.CallbackMetadata.Item.find(i => i.Name === "Amount")?.Value;
+    const phone  = body.CallbackMetadata.Item.find(i => i.Name === "PhoneNumber")?.Value;
+    const receipt = body.CallbackMetadata.Item.find(i => i.Name === "MpesaReceiptNumber")?.Value;
+
+    console.log(`✅ Payment received: KES ${amount} from ${phone} — Receipt: ${receipt}`);
+    // TODO: update your database here
+  } else {
+    console.log("❌ Payment failed:", body?.ResultDesc);
+  }
+
+  res.json({ ResultCode: 0, ResultDesc: "Accepted" });
 });
 
