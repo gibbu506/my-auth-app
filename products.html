@@ -397,8 +397,7 @@
           <div class="card-desc">${p.description || "No description available."}</div>
           <div class="card-footer">
             <div class="card-price">$${Number(p.price).toFixed(2)}</div>
-            <button class="btn-buy" onclick="alert('Coming soon!')">Buy Now</button>
-          </div>
+            <button class="btn-buy" onclick="buyProduct('${p.name}', ${p.price})">Buy Now</button>
         </div>
       `;
       grid.appendChild(card);
@@ -415,6 +414,33 @@
   }
 
   loadProducts();
+
+  async function buyProduct(name, price) {
+  const token = localStorage.getItem("token");
+  if (!token) return alert("Please login to buy.");
+
+  const phone = prompt("Enter your M-Pesa number (e.g. 2547XXXXXXXX):");
+  if (!phone) return;
+
+  const res = await fetch(`${API}/mpesa/pay`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ phone, amount: price, productName: name })
+  });
+
+  const data = await res.json();
+
+  if (data.ResponseCode === "0") {
+    alert("✅ Check your phone for the M-Pesa prompt!");
+  } else {
+    alert("❌ Payment failed: " + (data.errorMessage || "Try again"));
+  }
+}
+
+
 </script>
 
 </body>
