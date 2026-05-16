@@ -176,6 +176,7 @@ async function getMpesaToken() {
   );
 
   const data = await res.json();
+   console.log("MPESA TOKEN RESPONSE:", data);
   return data.access_token;
 }
 
@@ -215,6 +216,7 @@ app.post("/mpesa/pay", verifyToken, async (req, res) => {
     );
 
     const stkData = await stkRes.json();
+    console.log("STK RESPONSE:", stkData);
     res.json(stkData);
 
   } catch (err) {
@@ -240,4 +242,6 @@ app.post("/mpesa/callback", (req, res) => {
 
   res.json({ ResultCode: 0, ResultDesc: "Accepted" });
 });
+
+
 
