@@ -23,25 +23,30 @@ mongoose.connect(process.env.MONGO_URI)
 
 /* USER MODEL */
 const User = mongoose.model("User", {
-  username: String,
-  password: String
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  email:    { type: String },
+  phone:    { type: String },
+  role:     { type: String, default: "user" }
 });
 
 /* REGISTER ROUTE */
 app.post("/register", async (req, res) => {
+  const existing = await User.findOne({ username: req.body.username });
+  if (existing) {
+    return res.status(400).json({ message: "Username already taken" });
+  }
 
   const hashedPassword = await bcrypt.hash(req.body.password, 10);
-
   const user = new User({
     username: req.body.username,
-    password: hashedPassword
+    password: hashedPassword,
+    email:    req.body.email,
+    phone:    req.body.phone
   });
 
   await user.save();
-
-  res.json({
-    message: "User registered"
-  });
+  res.json({ message: "User registered" });
 });
 
 /* LOGIN ROUTE */
@@ -69,7 +74,7 @@ app.post("/login", async (req, res) => {
   }
 
   const token = jwt.sign(
-  { id: user._id },
+  { id: user._id,role: user.role }, 
    process.env.JWT_SECRET,
    { expiresIn: "1d" }
 
@@ -121,14 +126,11 @@ function verifyToken(req, res, next) {
   }
 }
 
-app.get("/dashboard", verifyToken, (req, res) => {
-
-  res.json({
-    message: "Welcome to your dashboard 🔥",
-    user: req.user
-  });
-
+app.get("/dashboard", verifyToken, async (req, res) => {
+  const user = await User.findById(req.user.id).select("-password");
+  res.json({ message: "Welcome!", user });
 });
+
 
 /* PRODUCT MODEL */
 const Product = mongoose.model("Product", {
@@ -243,5 +245,11 @@ app.post("/mpesa/callback", (req, res) => {
   res.json({ ResultCode: 0, ResultDesc: "Accepted" });
 });
 
+function verifyAdmin(req, res, next) {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ message: "Admins only" });
+  }
+  next();
+}
 
-
+  // ... rest of code
