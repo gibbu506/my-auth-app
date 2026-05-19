@@ -349,7 +349,7 @@
 
   function logout() {
     localStorage.removeItem("token");
-    window.location.href = "/index.html";
+    window.location.href = "/login.html";
   }
 
   async function loadProducts() {
@@ -423,7 +423,7 @@
   document.querySelector(".btn-logout").onclick = () => window.location.href = "/index.html";
 }
 
-  const phone = prompt("Enter your M-Pesa number (e.g. 2547XXXXXXXX):");
+  const phone = prompt("Enter your M-Pesa number (e.g. 07XXXXXXXX):");
   if (!phone) return;
 
   const res = await fetch(`${API}/mpesa/pay`, {

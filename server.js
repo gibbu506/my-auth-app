@@ -13,6 +13,11 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+// Block static from serving index.html automatically
+app.use((req, res, next) => {
+  if (req.path === "/" || req.path === "/index.html") return next();
+  express.static(__dirname)(req, res, next);
+});
 app.use(express.static(__dirname));
 
 /* DATABASE CONNECTION */
@@ -87,8 +92,9 @@ res.json({
 });
 
 /* HOME ROUTE */
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "products.html"));
+// Remove the "/" route entirely, keep this:
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "login.html"));
 });
 
 
