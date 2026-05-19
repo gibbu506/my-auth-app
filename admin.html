@@ -522,9 +522,26 @@
   }
 
   // Check auth on load
-  if (!localStorage.getItem("token")) window.location.href = "/index.html";
-  loadProducts();
-</script>
+  async function checkAdmin() {
+  const token = localStorage.getItem("token");
+  if (!token) return window.location.href = "/index.html";
 
+  const res  = await fetch(`${API}/dashboard`, {
+    headers: { authorization: `Bearer ${token}` }
+  });
+
+  const data = await res.json();
+
+  if (data.user?.role !== "admin") {
+    alert("Admins only!");
+    return window.location.href = "/index.html";
+  }
+
+  loadProducts();
+}
+
+
+</script>
+<script src="/shared.js"></script>
 </body>
 </html>
