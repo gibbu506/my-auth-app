@@ -417,7 +417,11 @@
 
   async function buyProduct(name, price) {
   const token = localStorage.getItem("token");
-  if (!token) return alert("Please login to buy.");
+  if (!token) {
+   document.querySelector(".nav-links").innerHTML = "";
+  document.querySelector(".btn-logout").textContent = "Login";
+  document.querySelector(".btn-logout").onclick = () => window.location.href = "/index.html";
+}
 
   const phone = prompt("Enter your M-Pesa number (e.g. 2547XXXXXXXX):");
   if (!phone) return;
