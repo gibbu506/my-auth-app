@@ -534,7 +534,7 @@
 
   if (data.user?.role !== "admin") {
     alert("Admins only!");
-    return window.location.href = "/index.html";
+    window.location.href = "/login.html";
   }
 
   loadProducts();
