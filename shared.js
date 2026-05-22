@@ -79,3 +79,76 @@ if ("serviceWorker" in navigator) {
     .then(() => console.log("SW registered"))
     .catch(err => console.log("SW error:", err));
 }
+/* COOKIE CONSENT BANNER */
+if (!localStorage.getItem("cookieAccepted")) {
+  document.body.insertAdjacentHTML("beforeend", `
+    <div id="cookieBanner" style="
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 14px;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 99999;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      max-width: 500px;
+      width: 90%;
+    ">
+      <div style="flex:1">
+        <div style="
+          font-family: 'Syne', sans-serif;
+          font-size: 14px;
+          font-weight: 700;
+          color: #f0f0f0;
+          margin-bottom: 4px;
+        ">🍪 We use cookies</div>
+        <div style="
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          color: #555;
+          line-height: 1.5;
+        ">We use cookies to keep you logged in and improve your experience.</div>
+      </div>
+      <div style="display:flex; gap:8px; flex-shrink:0;">
+        <button onclick="declineCookies()" style="
+          padding: 8px 16px;
+          background: none;
+          border: 1px solid #333;
+          border-radius: 8px;
+          color: #555;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          cursor: pointer;
+        ">Decline</button>
+        <button onclick="acceptCookies()" style="
+          padding: 8px 16px;
+          background: #c8f55a;
+          border: none;
+          border-radius: 8px;
+          color: #0a0a0a;
+          font-family: 'Syne', sans-serif;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+        ">Accept</button>
+      </div>
+    </div>
+  `);
+}
+
+function acceptCookies() {
+  localStorage.setItem("cookieAccepted", "true");
+  document.getElementById("cookieBanner").style.opacity = "0";
+  setTimeout(() => document.getElementById("cookieBanner").remove(), 300);
+}
+
+function declineCookies() {
+  localStorage.setItem("cookieAccepted", "false");
+  document.getElementById("cookieBanner").style.opacity = "0";
+  setTimeout(() => document.getElementById("cookieBanner").remove(), 300);
+}
