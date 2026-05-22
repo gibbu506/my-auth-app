@@ -4,18 +4,21 @@ require("dotenv").config();
 
 const express = require("express");
 const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const path = require("path");
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 // Block static from serving index.html automatically
 app.use((req, res, next) => {
-  if (req.path === "/" || req.path === "/index.html") return next();
+  if (req.path === "/" || req.path === "/products.html") return next();
   express.static(__dirname)(req, res, next);
 });
 app.use(express.static(__dirname));
@@ -25,6 +28,7 @@ mongoose.connect(process.env.MONGO_URI)
 
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log(err));
+
 
 /* USER MODEL */
 const User = mongoose.model("User", {
@@ -85,10 +89,17 @@ app.post("/login", async (req, res) => {
 
 );
 
-res.json({
-  message: "Login successful",
-  token: token
-});
+   res.cookie("token", token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+    maxAge: 24 * 60 * 60 * 1000
+  });
+
+  res.json({
+    message: "Login successful",
+    token: token
+  });
 });
 
 /* HOME ROUTE */
@@ -106,7 +117,7 @@ app.listen(PORT, () => {
 
 function verifyToken(req, res, next) {
 
-  const token = req.headers.authorization?.split(" ")[1];
+  const token = req.headers.authorization?.split(" ")[1]; || req.cookies.token;
 
   if (!token) {
     return res.status(401).json({
@@ -259,13 +270,3 @@ function verifyAdmin(req, res, next) {
 }
 
   // ... rest of code
-// Set a cookie in a response
-res.cookie("sessionId", "abc123", {
-  httpOnly: true,
-  secure: true,
-  maxAge: 3600000, // 1 hour in ms
-  sameSite: "strict"
-});
-
-// Clear a cookie
-res.clearCookie("sessionId");
