@@ -259,3 +259,13 @@ function verifyAdmin(req, res, next) {
 }
 
   // ... rest of code
+// Set a cookie in a response
+res.cookie("sessionId", "abc123", {
+  httpOnly: true,
+  secure: true,
+  maxAge: 3600000, // 1 hour in ms
+  sameSite: "strict"
+});
+
+// Clear a cookie
+res.clearCookie("sessionId");
