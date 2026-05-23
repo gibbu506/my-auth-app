@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin — Products</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
@@ -376,9 +377,10 @@
         <textarea id="prodDesc" rows="2" placeholder="Short product description..."></textarea>
       </div>
       <div class="field full">
-        <label>Image URL (optional)</label>
-        <input type="url" id="prodImage" placeholder="https://example.com/image.jpg"/>
-      </div>
+  <label>Product Image</label>
+  <input type="file" id="prodImageFile" accept="image/*" onchange="previewImage(this)"/>
+  <img id="imagePreview" style="margin-top:10px; max-height:120px; border-radius:8px; display:none;"/>
+</div>
     </div>
     <button class="btn-add" onclick="addProduct()">Add Product</button>
     <div id="addMsg" class="msg"></div>
@@ -451,52 +453,81 @@
         `<div style="color:var(--error);font-size:14px;">⚠️ Could not load products. Is your backend running?</div>`;
     }
   }
+async function addProduct() {
+  const name  = document.getElementById("prodName").value.trim();
+  const price = document.getElementById("prodPrice").value;
+  const desc  = document.getElementById("prodDesc").value.trim();
+  const file  = document.getElementById("prodImageFile").files[0];
+  const token = localStorage.getItem("token");
+  const btn   = document.querySelector(".btn-add");
 
-  async function addProduct() {
-    const name  = document.getElementById("prodName").value.trim();
-    const price = document.getElementById("prodPrice").value;
-    const desc  = document.getElementById("prodDesc").value.trim();
-    const image = document.getElementById("prodImage").value.trim();
-    const token = localStorage.getItem("token");
-    const btn   = document.querySelector(".btn-add");
+  if (!name || !price) return showMsg("addMsg", "Name and price are required.", "error");
+  if (!token) return window.location.href = "/login.html";
 
-    if (!name || !price) return showMsg("addMsg", "Name and price are required.", "error");
-    if (!token) return window.location.href = "/index.html";
+  btn.disabled = true;
+  btn.textContent = "Uploading...";
 
-    btn.disabled = true;
-    btn.textContent = "Adding...";
+  try {
+    // Upload image first if file selected
+    let imageUrl = "";
+    if (file) {
+      const formData = new FormData();
+      formData.append("image", file);
 
-    try {
-      const res  = await fetch(`${API}/products`, {
+      const uploadRes = await fetch(`${API}/upload`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ name, price: parseFloat(price), description: desc, image })
+        headers: { authorization: `Bearer ${token}` },
+        body: formData
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        showMsg("addMsg", data.message || "Failed to add product.", "error");
-      } else {
-        showMsg("addMsg", `"${name}" added successfully!`, "success");
-        // Clear form
-        document.getElementById("prodName").value  = "";
-        document.getElementById("prodPrice").value = "";
-        document.getElementById("prodDesc").value  = "";
-        document.getElementById("prodImage").value = "";
-        loadProducts();
-      }
-
-    } catch (err) {
-      showMsg("addMsg", "Server error.", "error");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Add Product";
+      const uploadData = await uploadRes.json();
+      imageUrl = uploadData.url;
     }
+
+    // Then add product with image URL
+    btn.textContent = "Adding...";
+    const res = await fetch(`${API}/products`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ name, price: parseFloat(price), description: desc, image: imageUrl })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showMsg("addMsg", data.message || "Failed to add product.", "error");
+    } else {
+      showMsg("addMsg", `"${name}" added successfully!`, "success");
+      document.getElementById("prodName").value  = "";
+      document.getElementById("prodPrice").value = "";
+      document.getElementById("prodDesc").value  = "";
+      document.getElementById("prodImageFile").value = "";
+      document.getElementById("imagePreview").style.display = "none";
+      loadProducts();
+    }
+
+  } catch (err) {
+    showMsg("addMsg", "Server error.", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Add Product";
   }
+}
+
+function previewImage(input) {
+  const preview = document.getElementById("imagePreview");
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.style.display = "block";
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
 
   async function deleteProduct(id) {
     const token = localStorage.getItem("token");
