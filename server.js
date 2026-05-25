@@ -16,7 +16,7 @@ const app = express();
 app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
-app.use(generallimiter);    
+app.use(generalLimiter);    
 
 /* DATABASE CONNECTION */
 mongoose.connect(process.env.MONGO_URI)
@@ -98,7 +98,7 @@ app.get("/login.html", (req, res) => {
 });
 
 /* REGISTER */
-app.post("/register",authlimiter, async (req, res) => {
+app.post("/register",authLimiter, async (req, res) => {
   const existing = await User.findOne({ username: req.body.username });
   if (existing) {
     return res.status(400).json({ message: "Username already taken" });
@@ -117,7 +117,7 @@ app.post("/register",authlimiter, async (req, res) => {
 });
 
 /* LOGIN */
-app.post("/login",authlimiter, async (req, res) => {
+app.post("/login",authLimiter, async (req, res) => {
   const user = await User.findOne({ username: req.body.username });
 
   if (!user) {
