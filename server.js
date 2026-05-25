@@ -15,8 +15,7 @@ const app = express();
 /* MIDDLEWARE */
 app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
-app.use(generalLimiter);    
+app.use(express.json());   
 
 /* DATABASE CONNECTION */
 mongoose.connect(process.env.MONGO_URI)
@@ -79,7 +78,7 @@ const authLimiter = rateLimit({
   max: 10,                   // 10 attempts per 15 min
   message: { message: "Too many attempts, try again later." }
 });
-
+app.use(generalLimiter);
 
 /* ─── ROUTES ─── */
 
