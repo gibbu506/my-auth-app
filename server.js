@@ -8,6 +8,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const path = require("path");
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
@@ -15,6 +16,7 @@ const app = express();
 app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+app.use(generallimiter);    
 
 /* DATABASE CONNECTION */
 mongoose.connect(process.env.MONGO_URI)
@@ -64,6 +66,21 @@ function verifyAdmin(req, res, next) {
   next();
 }
 
+// General — all routes
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,                  // 100 requests per 15 min
+  message: { message: "Too many requests, slow down." }
+});
+
+// Auth — stricter for login/register
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,                   // 10 attempts per 15 min
+  message: { message: "Too many attempts, try again later." }
+});
+
+
 /* ─── ROUTES ─── */
 
 /* HOME — serves products page */
@@ -81,7 +98,7 @@ app.get("/login.html", (req, res) => {
 });
 
 /* REGISTER */
-app.post("/register", async (req, res) => {
+app.post("/register",authlimiter, async (req, res) => {
   const existing = await User.findOne({ username: req.body.username });
   if (existing) {
     return res.status(400).json({ message: "Username already taken" });
@@ -100,7 +117,7 @@ app.post("/register", async (req, res) => {
 });
 
 /* LOGIN */
-app.post("/login", async (req, res) => {
+app.post("/login",authlimiter, async (req, res) => {
   const user = await User.findOne({ username: req.body.username });
 
   if (!user) {
