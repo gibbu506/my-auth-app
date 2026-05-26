@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#c8f55a"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard</title>
@@ -347,18 +351,8 @@
         <div class="card-label">Phone</div>
         <div class="card-value" id="cardPhone">—</div>
       </div>
-    </div>
-
-    <div class="section-title">
-      Session Token <span class="badge">JWT</span>
-    </div>
-
-    <div class="token-box">
-      <div class="token-text" id="tokenDisplay">—</div>
-      <button class="btn-copy" onclick="copyToken()">Copy</button>
-    </div>
-
-    <div class="status">
+       <div>
+        <div class="status">
       <div class="status-dot"></div>
       Session active
     </div>
@@ -435,6 +429,13 @@
   }
 
   loadDashboard();
+
+ if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/service-worker.js")
+      .then(() => console.log("SW registered"))
+      .catch(err => console.log("SW error:", err));
+  }
+
 </script>
 <script src="/shared.js"></script>
 </body>
