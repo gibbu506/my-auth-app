@@ -14,6 +14,7 @@ const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const app = express();
+app.set("trust proxy", 1);
 
 /* MIDDLEWARE */
 app.use(cookieParser());
