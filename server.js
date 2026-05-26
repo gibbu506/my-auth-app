@@ -9,6 +9,9 @@ const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const path = require("path");
 const rateLimit = require('express-rate-limit');
+const cloudinary = require("cloudinary").v2;
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const app = express();
 
@@ -258,4 +261,28 @@ app.use(express.static(__dirname));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+/* CLOUDINARY CONFIG */
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+/* MULTER STORAGE */
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder:         "products",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    transformation: [{ width: 800, height: 800, crop: "limit", quality: "auto" }]
+  }
+});
+
+const upload = multer({ storage });
+
+/* UPLOAD IMAGE */
+app.post("/upload", verifyToken, verifyAdmin, upload.single("image"), (req, res) => {
+  res.json({ url: req.file.path });
 });
