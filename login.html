@@ -1,9 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#c8f55a"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Auth</title>
+  <title>Login</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -13,7 +18,6 @@
       --surface: #111111;
       --border: #222222;
       --accent: #c8f55a;
-      --accent-dim: rgba(200, 245, 90, 0.12);
       --text: #f0f0f0;
       --muted: #666;
       --error: #ff5f5f;
@@ -28,49 +32,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
-    }
-
-    /* Background grid */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(200,245,90,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(200,245,90,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* Glow blob */
-    body::after {
-      content: '';
-      position: fixed;
-      width: 500px;
-      height: 500px;
-      background: radial-gradient(circle, rgba(200,245,90,0.07) 0%, transparent 70%);
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 0;
     }
 
     .card {
-      position: relative;
-      z-index: 1;
       width: 420px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 40px;
-      animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation: slideUp 0.4s cubic-bezier(0.22,1,0.36,1) both;
     }
 
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(30px); }
+      from { opacity: 0; transform: translateY(20px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
@@ -90,10 +64,8 @@
       height: 10px;
       background: var(--accent);
       border-radius: 50%;
-      display: inline-block;
     }
 
-    /* Tabs */
     .tabs {
       display: flex;
       background: var(--bg);
@@ -123,7 +95,6 @@
       border: 1px solid var(--border);
     }
 
-    /* Forms */
     .form { display: none; flex-direction: column; gap: 16px; }
     .form.active { display: flex; animation: fadeIn 0.3s ease; }
 
@@ -135,22 +106,18 @@
     .form-title {
       font-family: 'Syne', sans-serif;
       font-weight: 700;
-      font-size: 24px;
+      font-size: 22px;
       letter-spacing: -0.5px;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .form-subtitle {
       font-size: 13px;
       color: var(--muted);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
-    .field {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
 
     label {
       font-size: 12px;
@@ -169,14 +136,10 @@
       font-family: 'DM Sans', sans-serif;
       font-size: 14px;
       outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.2s;
     }
 
-    input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(200, 245, 90, 0.08);
-    }
-
+    input:focus { border-color: var(--accent); }
     input::placeholder { color: #333; }
 
     .btn {
@@ -191,7 +154,6 @@
       cursor: pointer;
       margin-top: 4px;
       transition: opacity 0.2s, transform 0.15s;
-      letter-spacing: 0.2px;
     }
 
     .btn:hover  { opacity: 0.88; transform: translateY(-1px); }
@@ -222,6 +184,10 @@
     }
 
     .footer-text span:hover { text-decoration: underline; }
+
+    @media (max-width: 480px) {
+      .card { width: 100%; margin: 20px; padding: 28px; }
+    }
   </style>
 </head>
 <body>
@@ -234,29 +200,28 @@
 
   <div class="tabs">
     <button class="tab active" onclick="switchTab('login')">Login</button>
-    <button class="tab"        onclick="switchTab('signup')">Sign Up</button>
+    <button class="tab" onclick="switchTab('signup')">Sign Up</button>
   </div>
 
   <!-- LOGIN FORM -->
   <div class="form active" id="loginForm">
     <div>
       <div class="form-title">Welcome back</div>
-      <div class="form-subtitle">Enter your credentials to continue</div>
+      <div class="form-subtitle">Enter your details to log in</div>
     </div>
 
     <div id="loginMsg" class="msg"></div>
 
     <div class="field">
       <label>Username</label>
-      <input type="text" id="loginUsername" placeholder="yourname" />
+      <input type="text" id="loginUsername" placeholder="yourname"/>
     </div>
     <div class="field">
       <label>Password</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" />
+      <input type="password" id="loginPassword" placeholder="••••••••"/>
     </div>
 
     <button class="btn" onclick="login()">Login</button>
-
     <p class="footer-text">No account? <span onclick="switchTab('signup')">Sign up</span></p>
   </div>
 
@@ -264,30 +229,29 @@
   <div class="form" id="signupForm">
     <div>
       <div class="form-title">Create account</div>
-      <div class="form-subtitle">Fill in your details to get started</div>
+      <div class="form-subtitle">Fill in your details to sign up</div>
     </div>
 
     <div id="signupMsg" class="msg"></div>
 
     <div class="field">
       <label>Username</label>
-      <input type="text" id="signupUsername" placeholder="yourname" />
+      <input type="text" id="signupUsername" placeholder="yourname"/>
     </div>
     <div class="field">
-      <label>Email <span style="color:#333;font-weight:300">(optional)</span></label>
-      <input type="email" id="signupEmail" placeholder="you@email.com" />
+      <label>Email <span style="color:#444;font-weight:300">(optional)</span></label>
+      <input type="email" id="signupEmail" placeholder="you@email.com"/>
     </div>
     <div class="field">
-      <label>Phone <span style="color:#333;font-weight:300">(optional)</span></label>
-      <input type="tel" id="signupPhone" placeholder="+254 7XX XXX XXX" />
+      <label>Phone <span style="color:#444;font-weight:300">(optional)</span></label>
+      <input type="tel" id="signupPhone" placeholder="+254 7XX XXX XXX"/>
     </div>
     <div class="field">
       <label>Password</label>
-      <input type="password" id="signupPassword" placeholder="••••••••" />
+      <input type="password" id="signupPassword" placeholder="••••••••"/>
     </div>
 
     <button class="btn" onclick="signup()">Create Account</button>
-
     <p class="footer-text">Already have an account? <span onclick="switchTab('login')">Login</span></p>
   </div>
 
@@ -297,14 +261,11 @@
   const API = "https://my-auth-app-23h6.onrender.com";
 
   function switchTab(tab) {
-    const tabs = document.querySelectorAll(".tab");
-    const forms = document.querySelectorAll(".form");
-
-    tabs.forEach((t, i) => t.classList.toggle("active", (tab === "login" ? 0 : 1) === i));
+    document.querySelectorAll(".tab").forEach((t, i) =>
+      t.classList.toggle("active", (tab === "login" ? 0 : 1) === i)
+    );
     document.getElementById("loginForm").classList.toggle("active", tab === "login");
     document.getElementById("signupForm").classList.toggle("active", tab === "signup");
-
-    // Clear messages on switch
     showMsg("loginMsg", "", "");
     showMsg("signupMsg", "", "");
   }
@@ -326,7 +287,7 @@
     btn.textContent = "Logging in...";
 
     try {
-      const res  = await fetch(`${API}/login`, {
+      const res = await fetch(`${API}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password })
@@ -338,8 +299,8 @@
         showMsg("loginMsg", data.message || "Login failed.", "error");
       } else {
         localStorage.setItem("token", data.token);
-        showMsg("loginMsg", "Login successful! Redirecting...", "success");
-        setTimeout(() => window.location.href = "/login.html", 1000);
+        showMsg("loginMsg", "Login successful. Redirecting...", "success");
+        setTimeout(() => window.location.href = "/products.html", 1000);
       }
 
     } catch (err) {
@@ -363,7 +324,7 @@
     btn.textContent = "Creating account...";
 
     try {
-      const res  = await fetch(`${API}/register`, {
+      const res = await fetch(`${API}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, phone, password })
@@ -374,7 +335,7 @@
       if (!res.ok) {
         showMsg("signupMsg", data.message || "Registration failed.", "error");
       } else {
-        showMsg("signupMsg", "Account created! Switching to login...", "success");
+        showMsg("signupMsg", "Account created. Switching to login...", "success");
         setTimeout(() => switchTab("login"), 1500);
       }
 

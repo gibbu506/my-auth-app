@@ -12,7 +12,6 @@
     :root {
       --bg: #0a0a0a;
       --surface: #111111;
-      --surface2: #161616;
       --border: #222222;
       --accent: #c8f55a;
       --accent-dim: rgba(200,245,90,0.1);
@@ -29,28 +28,13 @@
       min-height: 100vh;
     }
 
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(200,245,90,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(200,245,90,0.025) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
     nav {
-      position: relative;
-      z-index: 10;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 20px 40px;
       border-bottom: 1px solid var(--border);
-      background: rgba(10,10,10,0.85);
-      backdrop-filter: blur(12px);
+      background: var(--bg);
     }
 
     .logo {
@@ -94,8 +78,6 @@
     .btn-logout:hover { border-color: var(--error); color: var(--error); }
 
     main {
-      position: relative;
-      z-index: 1;
       max-width: 1000px;
       margin: 0 auto;
       padding: 50px 40px;
@@ -129,7 +111,6 @@
       margin-top: 6px;
     }
 
-    /* ADD FORM */
     .add-form {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -143,9 +124,6 @@
       font-size: 16px;
       font-weight: 700;
       margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     .form-grid {
@@ -174,13 +152,12 @@
       font-family: 'DM Sans', sans-serif;
       font-size: 14px;
       outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.2s;
       resize: none;
     }
 
     input:focus, textarea:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(200,245,90,0.08);
     }
 
     input::placeholder, textarea::placeholder { color: #333; }
@@ -213,7 +190,6 @@
     .msg.success { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(200,245,90,0.2); display: block; }
     .msg.error   { background: rgba(255,95,95,0.1); color: var(--error); border: 1px solid rgba(255,95,95,0.2); display: block; }
 
-    /* PRODUCTS LIST */
     .section-title {
       font-family: 'Syne', sans-serif;
       font-size: 18px;
@@ -250,7 +226,6 @@
       align-items: center;
       gap: 18px;
       transition: border-color 0.2s;
-      animation: fadeUp 0.3s ease both;
     }
 
     .product-row:hover { border-color: #2a2a2a; }
@@ -360,7 +335,6 @@
     </div>
   </div>
 
-  <!-- ADD FORM -->
   <div class="add-form">
     <div class="form-title">➕ Add New Product</div>
     <div class="form-grid">
@@ -369,24 +343,23 @@
         <input type="text" id="prodName" placeholder="e.g. Wireless Headphones"/>
       </div>
       <div class="field">
-        <label>Price ($)</label>
-        <input type="number" id="prodPrice" placeholder="e.g. 49.99" min="0" step="0.01"/>
+        <label>Price (KSh)</label>
+        <input type="number" id="prodPrice" placeholder="e.g. 4999" min="0" step="1"/>
       </div>
       <div class="field full">
         <label>Description</label>
         <textarea id="prodDesc" rows="2" placeholder="Short product description..."></textarea>
       </div>
       <div class="field full">
-  <label>Product Image</label>
-  <input type="file" id="prodImageFile" accept="image/*" onchange="previewImage(this)"/>
-  <img id="imagePreview" style="margin-top:10px; max-height:120px; border-radius:8px; display:none;"/>
-</div>
+        <label>Product Image</label>
+        <input type="file" id="prodImageFile" accept="image/*" onchange="previewImage(this)"/>
+        <img id="imagePreview" style="margin-top:10px; max-height:120px; border-radius:8px; display:none;"/>
+      </div>
     </div>
     <button class="btn-add" onclick="addProduct()">Add Product</button>
     <div id="addMsg" class="msg"></div>
   </div>
 
-  <!-- PRODUCTS LIST -->
   <div class="section-title">All Products</div>
   <div id="loadingProducts">
     <div class="spinner"></div>
@@ -400,7 +373,7 @@
 
   function logout() {
     localStorage.removeItem("token");
-    window.location.href = "/index.html";
+    window.location.href = "/login.html";
   }
 
   function showMsg(id, text, type) {
@@ -442,7 +415,7 @@
             <div class="product-name">${p.name}</div>
             <div class="product-desc">${p.description || "No description"}</div>
           </div>
-          <div class="card-price">KSh ${Number(p.price).toFixed(0)}</div>
+          <div class="product-price">KSh ${Number(p.price).toFixed(0)}</div>
           <button class="btn-delete" onclick="deleteProduct('${p._id}')">Delete</button>
         `;
         list.appendChild(row);
@@ -453,81 +426,80 @@
         `<div style="color:var(--error);font-size:14px;">⚠️ Could not load products. Is your backend running?</div>`;
     }
   }
-async function addProduct() {
-  const name  = document.getElementById("prodName").value.trim();
-  const price = document.getElementById("prodPrice").value;
-  const desc  = document.getElementById("prodDesc").value.trim();
-  const file  = document.getElementById("prodImageFile").files[0];
-  const token = localStorage.getItem("token");
-  const btn   = document.querySelector(".btn-add");
 
-  if (!name || !price) return showMsg("addMsg", "Name and price are required.", "error");
-  if (!token) return window.location.href = "/login.html";
+  async function addProduct() {
+    const name  = document.getElementById("prodName").value.trim();
+    const price = document.getElementById("prodPrice").value;
+    const desc  = document.getElementById("prodDesc").value.trim();
+    const file  = document.getElementById("prodImageFile").files[0];
+    const token = localStorage.getItem("token");
+    const btn   = document.querySelector(".btn-add");
 
-  btn.disabled = true;
-  btn.textContent = "Uploading...";
+    if (!name || !price) return showMsg("addMsg", "Name and price are required.", "error");
+    if (!token) return window.location.href = "/login.html";
 
-  try {
-    // Upload image first if file selected
-    let imageUrl = "";
-    if (file) {
-      const formData = new FormData();
-      formData.append("image", file);
+    btn.disabled = true;
+    btn.textContent = "Uploading...";
 
-      const uploadRes = await fetch(`${API}/upload`, {
+    try {
+      let imageUrl = "";
+      if (file) {
+        const formData = new FormData();
+        formData.append("image", file);
+
+        const uploadRes = await fetch(`${API}/upload`, {
+          method: "POST",
+          headers: { authorization: `Bearer ${token}` },
+          body: formData
+        });
+
+        const uploadData = await uploadRes.json();
+        imageUrl = uploadData.url;
+      }
+
+      btn.textContent = "Adding...";
+      const res = await fetch(`${API}/products`, {
         method: "POST",
-        headers: { authorization: `Bearer ${token}` },
-        body: formData
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ name, price: parseFloat(price), description: desc, image: imageUrl })
       });
 
-      const uploadData = await uploadRes.json();
-      imageUrl = uploadData.url;
+      const data = await res.json();
+
+      if (!res.ok) {
+        showMsg("addMsg", data.message || "Failed to add product.", "error");
+      } else {
+        showMsg("addMsg", `"${name}" added successfully!`, "success");
+        document.getElementById("prodName").value  = "";
+        document.getElementById("prodPrice").value = "";
+        document.getElementById("prodDesc").value  = "";
+        document.getElementById("prodImageFile").value = "";
+        document.getElementById("imagePreview").style.display = "none";
+        loadProducts();
+      }
+
+    } catch (err) {
+      showMsg("addMsg", "Server error.", "error");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Add Product";
     }
+  }
 
-    // Then add product with image URL
-    btn.textContent = "Adding...";
-    const res = await fetch(`${API}/products`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ name, price: parseFloat(price), description: desc, image: imageUrl })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      showMsg("addMsg", data.message || "Failed to add product.", "error");
-    } else {
-      showMsg("addMsg", `"${name}" added successfully!`, "success");
-      document.getElementById("prodName").value  = "";
-      document.getElementById("prodPrice").value = "";
-      document.getElementById("prodDesc").value  = "";
-      document.getElementById("prodImageFile").value = "";
-      document.getElementById("imagePreview").style.display = "none";
-      loadProducts();
+  function previewImage(input) {
+    const preview = document.getElementById("imagePreview");
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        preview.src = e.target.result;
+        preview.style.display = "block";
+      };
+      reader.readAsDataURL(input.files[0]);
     }
-
-  } catch (err) {
-    showMsg("addMsg", "Server error.", "error");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Add Product";
   }
-}
-
-function previewImage(input) {
-  const preview = document.getElementById("imagePreview");
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      preview.src = e.target.result;
-      preview.style.display = "block";
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
-}
 
   async function deleteProduct(id) {
     const token = localStorage.getItem("token");
@@ -536,7 +508,7 @@ function previewImage(input) {
     try {
       const res = await fetch(`${API}/products/${id}`, {
         method: "DELETE",
-        headers: { "authorization": `Bearer ${token}` }
+        headers: { authorization: `Bearer ${token}` }
       });
 
       if (res.ok) {
@@ -552,26 +524,25 @@ function previewImage(input) {
     }
   }
 
-  // Check auth on load
   async function checkAdmin() {
-  const token = localStorage.getItem("token");
-  if (!token) return window.location.href = "/index.html";
+    const token = localStorage.getItem("token");
+    if (!token) return window.location.href = "/login.html";
 
-  const res  = await fetch(`${API}/dashboard`, {
-    headers: { authorization: `Bearer ${token}` }
-  });
+    const res  = await fetch(`${API}/dashboard`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (data.user?.role !== "admin") {
-    alert("Admins only!");
-    window.location.href = "/login.html";
+    if (data.user?.role !== "admin") {
+      alert("Admins only!");
+      return window.location.href = "/login.html";
+    }
+
+    loadProducts();
   }
 
-  loadProducts();
-}
-
-
+  checkAdmin();
 </script>
 <script src="/shared.js"></script>
 </body>

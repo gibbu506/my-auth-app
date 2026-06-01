@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="manifest" href="/manifest.json"/>
-<meta name="theme-color" content="#c8f55a"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta charset="UTF-8"/>
   <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#c8f55a"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Products</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
@@ -21,6 +21,7 @@
       --accent-dim: rgba(200,245,90,0.1);
       --text: #f0f0f0;
       --muted: #555;
+      --error: #ff5f5f;
       --radius: 14px;
     }
 
@@ -31,28 +32,13 @@
       min-height: 100vh;
     }
 
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(200,245,90,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(200,245,90,0.025) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
     nav {
-      position: relative;
-      z-index: 10;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 20px 40px;
       border-bottom: 1px solid var(--border);
-      background: rgba(10,10,10,0.85);
-      backdrop-filter: blur(12px);
+      background: var(--bg);
     }
 
     .logo {
@@ -94,11 +80,9 @@
       transition: all 0.2s;
     }
 
-    .btn-logout:hover { border-color: #ff5f5f; color: #ff5f5f; }
+    .btn-logout:hover { border-color: var(--error); color: var(--error); }
 
     main {
-      position: relative;
-      z-index: 1;
       max-width: 1100px;
       margin: 0 auto;
       padding: 60px 40px;
@@ -110,49 +94,28 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* HERO */
-    .hero {
-      margin-bottom: 60px;
-      text-align: center;
+    .page-header {
+      margin-bottom: 40px;
     }
 
-    .hero-label {
-      display: inline-block;
-      font-size: 11px;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      font-weight: 600;
-      border: 1px solid rgba(200,245,90,0.3);
-      background: var(--accent-dim);
-      padding: 5px 14px;
-      border-radius: 99px;
-      margin-bottom: 20px;
-    }
-
-    .hero-title {
+    .page-title {
       font-family: 'Syne', sans-serif;
-      font-size: 52px;
+      font-size: 32px;
       font-weight: 800;
-      letter-spacing: -2px;
-      line-height: 1;
-      margin-bottom: 16px;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
     }
 
-    .hero-title span { color: var(--accent); }
+    .page-title span { color: var(--accent); }
 
-    .hero-sub {
-      font-size: 15px;
+    .page-sub {
+      font-size: 14px;
       color: var(--muted);
-      max-width: 400px;
-      margin: 0 auto;
-      line-height: 1.6;
+      margin-bottom: 24px;
     }
 
-    /* SEARCH */
     .search-wrap {
-      max-width: 420px;
-      margin: 32px auto 0;
+      max-width: 380px;
       position: relative;
     }
 
@@ -160,8 +123,8 @@
       width: 100%;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 99px;
-      padding: 13px 20px 13px 46px;
+      border-radius: 8px;
+      padding: 11px 16px;
       color: var(--text);
       font-family: 'DM Sans', sans-serif;
       font-size: 14px;
@@ -172,17 +135,6 @@
     .search-wrap input:focus { border-color: var(--accent); }
     .search-wrap input::placeholder { color: #333; }
 
-    .search-icon {
-      position: absolute;
-      left: 18px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-      font-size: 16px;
-      pointer-events: none;
-    }
-
-    /* GRID */
     #loadingProducts {
       text-align: center;
       color: var(--muted);
@@ -201,29 +153,31 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    .result-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
     .product-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 20px;
     }
 
     .product-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 18px;
+      border-radius: 14px;
       overflow: hidden;
-      transition: transform 0.2s, border-color 0.2s;
-      animation: fadeUp 0.4s ease both;
+      transition: border-color 0.2s;
     }
 
-    .product-card:hover {
-      transform: translateY(-4px);
-      border-color: #2a2a2a;
-    }
+    .product-card:hover { border-color: #2a2a2a; }
 
     .card-img {
       width: 100%;
-      height: 180px;
+      height: 200px;
       object-fit: cover;
       background: #0d0d0d;
       display: block;
@@ -231,12 +185,8 @@
 
     .card-img-placeholder {
       width: 100%;
-      height: 180px;
+      height: 200px;
       background: #0d0d0d;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 48px;
       border-bottom: 1px solid var(--border);
     }
 
@@ -244,10 +194,9 @@
 
     .card-name {
       font-family: 'Syne', sans-serif;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 700;
-      letter-spacing: -0.3px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .card-desc {
@@ -269,7 +218,7 @@
 
     .card-price {
       font-family: 'Syne', sans-serif;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 800;
       color: var(--accent);
     }
@@ -279,15 +228,15 @@
       background: var(--accent);
       color: #0a0a0a;
       border: none;
-      border-radius: 99px;
+      border-radius: 8px;
       font-family: 'Syne', sans-serif;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
-      transition: opacity 0.2s, transform 0.15s;
+      transition: opacity 0.2s;
     }
 
-    .btn-buy:hover { opacity: 0.85; transform: scale(1.03); }
+    .btn-buy:hover { opacity: 0.85; }
 
     .empty {
       text-align: center;
@@ -297,20 +246,15 @@
       grid-column: 1 / -1;
     }
 
-    .empty-icon { font-size: 40px; margin-bottom: 12px; }
-
-    /* Result count */
-    .result-label {
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 20px;
+    @media (max-width: 900px) {
+      .product-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 640px) {
       nav { padding: 16px 20px; }
       main { padding: 40px 20px; }
-      .hero-title { font-size: 34px; }
       .product-grid { grid-template-columns: 1fr; }
+      .page-title { font-size: 26px; }
     }
   </style>
 </head>
@@ -318,22 +262,19 @@
 
 <nav>
   <div class="logo"><span class="logo-dot"></span> YourApp</div>
-  <div class="nav-links">
+  <div class="nav-links" id="navLinks">
     <a href="/dashboard.html" class="nav-link">Dashboard</a>
     <a href="/products.html" class="nav-link active">Products</a>
     <a href="/admin.html" class="nav-link">Admin</a>
   </div>
-  <button class="btn-logout" onclick="logout()">Logout</button>
+  <button class="btn-logout" id="navBtn" onclick="logout()">Logout</button>
 </nav>
 
 <main>
-  <div class="hero">
-    <div class="hero-label">Store</div>
-    <div class="hero-title">Our <span>Products</span></div>
-    <div class="hero-sub">Browse everything we have. Fresh inventory, updated in real time.</div>
-
+  <div class="page-header">
+    <div class="page-title">All <span>Products</span></div>
+    <div class="page-sub">Browse what we have in stock. Prices in KSh.</div>
     <div class="search-wrap">
-      <span class="search-icon">🔍</span>
       <input type="text" id="searchInput" placeholder="Search products..." oninput="filterProducts()"/>
     </div>
   </div>
@@ -342,7 +283,7 @@
 
   <div id="loadingProducts">
     <div class="spinner"></div>
-    Loading products...
+    Loading...
   </div>
 
   <div class="product-grid" id="productGrid"></div>
@@ -352,6 +293,15 @@
   const API = "https://my-auth-app-23h6.onrender.com";
   let allProducts = [];
 
+  // Show login button if not logged in
+  const token = localStorage.getItem("token");
+  if (!token) {
+    document.getElementById("navLinks").innerHTML = "";
+    const btn = document.getElementById("navBtn");
+    btn.textContent = "Login";
+    btn.onclick = () => window.location.href = "/login.html";
+  }
+
   function logout() {
     localStorage.removeItem("token");
     window.location.href = "/login.html";
@@ -359,50 +309,44 @@
 
   async function loadProducts() {
     try {
-      const res      = await fetch(`${API}/products`);
-      allProducts    = await res.json();
-
+      const res = await fetch(`${API}/products`);
+      allProducts = await res.json();
       document.getElementById("loadingProducts").style.display = "none";
       renderProducts(allProducts);
-
     } catch (err) {
       document.getElementById("loadingProducts").innerHTML =
-        `<div style="color:#ff5f5f;font-size:14px;">⚠️ Could not load products.</div>`;
+        `<div style="color:var(--error);font-size:14px;">Could not load products. Try again later.</div>`;
     }
   }
 
   function renderProducts(products) {
-    const grid = document.getElementById("productGrid");
+    const grid  = document.getElementById("productGrid");
     const label = document.getElementById("resultLabel");
     grid.innerHTML = "";
 
     label.textContent = products.length > 0
-      ? `Showing ${products.length} product${products.length !== 1 ? "s" : ""}`
+      ? `${products.length} product${products.length !== 1 ? "s" : ""} found`
       : "";
 
     if (products.length === 0) {
-      grid.innerHTML = `
-        <div class="empty">
-          <div class="empty-icon">🛍️</div>
-          No products found.
-        </div>`;
+      grid.innerHTML = `<div class="empty">No products found.</div>`;
       return;
     }
 
     products.forEach((p, i) => {
       const card = document.createElement("div");
       card.className = "product-card";
-      card.style.animationDelay = `${i * 0.06}s`;
       card.innerHTML = `
         ${p.image
-          ? `<img class="card-img" src="${p.image}" alt="${p.name}" onerror="this.outerHTML='<div class=\\'card-img-placeholder\\'>📦</div>'">`
-          : `<div class="card-img-placeholder">📦</div>`}
+          ? `<img class="card-img" src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">`
+          : `<div class="card-img-placeholder"></div>`}
         <div class="card-body">
           <div class="card-name">${p.name}</div>
           <div class="card-desc">${p.description || "No description available."}</div>
           <div class="card-footer">
-<div class="card-price">KSh ${Number(p.price).toFixed(0)}</div>
+            <div class="card-price">KSh ${Number(p.price).toFixed(0)}</div>
             <button class="btn-buy" onclick="buyProduct('${p.name}', ${p.price})">Buy Now</button>
+          </div>
         </div>
       `;
       grid.appendChild(card);
@@ -418,43 +362,39 @@
     renderProducts(filtered);
   }
 
-  loadProducts();
-
   async function buyProduct(name, price) {
-  const token = localStorage.getItem("token");
-  if (!token) {
-   document.querySelector(".nav-links").innerHTML = "";
-  document.querySelector(".btn-logout").textContent = "Login";
-  document.querySelector(".btn-logout").onclick = () => window.location.href = "/index.html";
-}
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login.html";
+      return;
+    }
 
-  const phone = prompt("Enter your M-Pesa number (e.g. 07XXXXXXXX):");
-  if (!phone) return;
+    const phone = prompt("Enter your M-Pesa number (e.g. 2547XXXXXXXX):");
+    if (!phone) return;
 
-  const res = await fetch(`${API}/mpesa/pay`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify({ phone, amount: price, productName: name })
-  });
+    try {
+      const res = await fetch(`${API}/mpesa/pay`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ phone, amount: price, productName: name })
+      });
 
-  const data = await res.json();
+      const data = await res.json();
 
-  if (data.ResponseCode === "0") {
-    alert("✅ Check your phone for the M-Pesa prompt!");
-  } else {
-    alert("❌ Payment failed: " + (data.errorMessage || "Try again"));
-  }
-}
-
- if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/service-worker.js")
-      .then(() => console.log("SW registered"))
-      .catch(err => console.log("SW error:", err));
+      if (data.ResponseCode === "0") {
+        alert("Check your phone for the M-Pesa prompt.");
+      } else {
+        alert("Payment failed. " + (data.errorMessage || "Please try again."));
+      }
+    } catch (err) {
+      alert("Could not process payment. Try again.");
+    }
   }
 
+  loadProducts();
 </script>
 <script src="/shared.js"></script>
 </body>
