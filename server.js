@@ -191,7 +191,7 @@ async function getMpesaToken() {
   );
 
   const data = await res.json();
-  console.log("MPESA TOKEN RESPONSE:", data);
+  console.log("MPESA TOKEN RESPONSE:", JSON.stringify(data));
   return data.access_token;
 }
 
@@ -231,7 +231,7 @@ app.post("/mpesa/pay", verifyToken, async (req, res) => {
     );
 
     const stkData = await stkRes.json();
-    console.log("STK RESPONSE:", stkData);
+    console.log("STK RESPONSE:", JSON.stringify(stkData));
     res.json(stkData);
 
   } catch (err) {
@@ -285,5 +285,9 @@ const upload = multer({ storage });
 
 /* UPLOAD IMAGE */
 app.post("/upload", verifyToken, verifyAdmin, upload.single("image"), (req, res) => {
+  console.log("Upload req.file:", JSON.stringify(req.file));
+  if (!req.file) {
+    return res.status(400).json({ message: "No file received" });
+  }
   res.json({ url: req.file.path });
 });
