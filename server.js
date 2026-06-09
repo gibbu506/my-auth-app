@@ -139,18 +139,25 @@ app.post("/register",authLimiter, async (req, res) => {
   res.json({ message: "User registered" });
 });
 
-/* LOGIN */
-app.post("/login",authLimiter, async (req, res) => {
-  
+/* LoGin */
+app.post("/login", authLimiter, async (req, res) => {
   const { username, password } = req.body;
-if (typeof username !== "string" || typeof password !== "string") {
-  return res.status(400).json({ message: "Invalid input" });
-}
 
-  const validPassword = await bcrypt.compare(req.body.password, user.password);
+  // Input validation
+  if (typeof username !== "string" || typeof password !== "string") {
+    return res.status(400).json({ message: "Invalid input" });
+  }
 
-  if (!validPassword) {
-    return res.status(400).json({ message:  "Invalid username or password"});
+  // Declare user in route scope so it's accessible everywhere below
+  const user = await User.findOne({ username });
+
+  // Timing-safe comparison — always run bcrypt
+  const dummyHash = "$2b$10$invalidhashXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+  const hashToCompare = user ? user.password : dummyHash;
+  const validPassword = await bcrypt.compare(password, hashToCompare);
+
+  if (!user || !validPassword) {
+    return res.status(400).json({ message: "Invalid username or password" });
   }
 
   const token = jwt.sign(
@@ -166,8 +173,9 @@ if (typeof username !== "string" || typeof password !== "string") {
     maxAge: 24 * 60 * 60 * 1000
   });
 
-  res.json({ message: "Login successful", });
+  res.json({ message: "Login successful" });
 });
+
 
 /* DASHBOARD */
 app.get("/dashboard", verifyToken, async (req, res) => {
