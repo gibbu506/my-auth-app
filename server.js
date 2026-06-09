@@ -141,16 +141,16 @@ app.post("/register",authLimiter, async (req, res) => {
 
 /* LOGIN */
 app.post("/login",authLimiter, async (req, res) => {
-  const user = await User.findOne({ username: req.body.username });
-
-  if (!user) {
-    return res.status(400).json({ message: "User not found" });
-  }
+  
+  const { username, password } = req.body;
+if (typeof username !== "string" || typeof password !== "string") {
+  return res.status(400).json({ message: "Invalid input" });
+}
 
   const validPassword = await bcrypt.compare(req.body.password, user.password);
 
   if (!validPassword) {
-    return res.status(400).json({ message: "Wrong password" });
+    return res.status(400).json({ message:  "Invalid username or password"});
   }
 
   const token = jwt.sign(
@@ -161,12 +161,12 @@ app.post("/login",authLimiter, async (req, res) => {
 
   res.cookie("token", token, {
     httpOnly: true,
-    secure: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     maxAge: 24 * 60 * 60 * 1000
   });
 
-  res.json({ message: "Login successful", token });
+  res.json({ message: "Login successful", });
 });
 
 /* DASHBOARD */
