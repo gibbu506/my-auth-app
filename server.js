@@ -12,6 +12,8 @@ const rateLimit = require('express-rate-limit');
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const axios = require("axios");
+const helmet =require("helmet");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -19,6 +21,7 @@ app.set("trust proxy", 1);
 /* MIDDLEWARE */
 app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
+app.use(helmet());
 app.use(express.json());   
 
 /* DATABASE CONNECTION */
@@ -111,69 +114,74 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "products.html"));
 });
 
-/* LOGIN PAGE */
-app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "login.html"));
-});
+// Dummy hash used for timing-safe comparison when user is not found.
+// Generated once at startup to avoid per-request overhead.
+const DUMMY_HASH = bcrypt.hashSync("dummy_password_for_timing", 10);
 
-app.get("/login.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "login.html"));
-});
-
-/* REGISTER */
-app.post("/register",authLimiter, async (req, res) => {
-  const existing = await User.findOne({ username: req.body.username });
-  if (existing) {
-    return res.status(400).json({ message: "Username already taken" });
-  }
-
-  const hashedPassword = await bcrypt.hash(req.body.password, 10);
-  const user = new User({
-    username: req.body.username,
-    password: hashedPassword,
-    email:    req.body.email,
-    phone:    req.body.phone
-  });
-
-  await user.save();
-  res.json({ message: "User registered" });
-});
-
-/* LoGin */
 app.post("/login", authLimiter, async (req, res) => {
-  const { username, password } = req.body;
+  try {
+    const { username, password, "g-recaptcha-response": captcha } = req.body;
 
-  // Input validation
-  if (typeof username !== "string" || typeof password !== "string") {
-    return res.status(400).json({ message: "Invalid input" });
+    // 1. Check captcha exists
+    if (!captcha) {
+      return res.status(400).json({ message: "Captcha required" });
+    }
+
+    // 2. Verify with Google reCAPTCHA
+    const verify = await axios.post(
+      "https://www.google.com/recaptcha/api/siteverify",
+      null,
+      {
+        params: {
+          secret: process.env.RECAPTCHA_SECRET,
+          response: captcha,
+        },
+      }
+    );
+
+    if (!verify.data.success) {
+      return res.status(400).json({ message: "Captcha failed" });
+    }
+
+    // 3. Input validation
+    if (typeof username !== "string" || typeof password !== "string") {
+      return res.status(400).json({ message: "Invalid input" });
+    }
+
+    // 4. Find user
+    const user = await User.findOne({ username });
+
+    // 5. Timing-safe password check (always runs bcrypt to prevent timing attacks)
+    const hashToCompare = user ? user.password : DUMMY_HASH;
+    const validPassword = await bcrypt.compare(password, hashToCompare);
+
+    // 6. Reject if user not found or password invalid
+    if (!user || !validPassword) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+
+    // 7. Sign JWT
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    // 8. Set cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    // 9. Respond — don't leak internal user fields
+    return res.status(200).json({ message: "Login successful" });
+
+  } catch (error) {
+    console.error("Login error:", error);
+    return res.status(500).json({ message: "Server error" });
   }
-
-  // Declare user in route scope so it's accessible everywhere below
-  const user = await User.findOne({ username });
-
-  // Timing-safe comparison — always run bcrypt
-  const dummyHash = "$2b$10$invalidhashXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-  const hashToCompare = user ? user.password : dummyHash;
-  const validPassword = await bcrypt.compare(password, hashToCompare);
-
-  if (!user || !validPassword) {
-    return res.status(400).json({ message: "Invalid username or password" });
-  }
-
-  const token = jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: "1d" }
-  );
-
-  res.cookie("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 24 * 60 * 60 * 1000
-  });
-
-  res.json({ message: "Login successful" });
 });
 
 

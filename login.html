@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   <meta charset="UTF-8"/>
   <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
   <link rel="manifest" href="/manifest.json"/>
@@ -208,6 +209,7 @@
     <div>
       <div class="form-title">Welcome back</div>
       <div class="form-subtitle">Enter your details to log in</div>
+      <div class="g-recaptcha" data-sitekey="6LcVxxUtAAAAAOEaOSbvv0_lGwPSO2mA6OF2b3X3"></div>
     </div>
 
     <div id="loginMsg" class="msg"></div>
@@ -276,21 +278,26 @@
     el.className = "msg " + (text ? type : "");
   }
 
-  async function login() {
-    const username = document.getElementById("loginUsername").value.trim();
-    const password = document.getElementById("loginPassword").value;
-    const btn = document.querySelector("#loginForm .btn");
+async function login() {
+  const username = document.getElementById("loginUsername").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  const btn = document.querySelector("#loginForm .btn");
 
-    if (!username || !password) return showMsg("loginMsg", "Please fill in all fields.", "error");
+  
+  const recaptcha = grecaptcha.getResponse();
+  if (!recaptcha) return showMsg("loginMsg", "Please complete the recaptcha.", "error");
 
-    btn.disabled = true;
-    btn.textContent = "Logging in...";
+  if (!username || !password) return showMsg("loginMsg", "Please fill in all fields.", "error");
 
-    try {
+  btn.disabled = true;
+  btn.textContent = "Logging in...";
+
+  
+  try {
       const res = await fetch(`${API}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password ,recaptcha})
       });
 
       const data = await res.json();
