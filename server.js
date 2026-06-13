@@ -21,8 +21,37 @@ app.set("trust proxy", 1);
 /* MIDDLEWARE */
 app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
-app.use(helmet());
-app.use(express.json());   
+app.use(helmet({contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://www.google.com/recaptcha/",
+        "https://www.gstatic.com/recaptcha/"
+      ],
+      frameSrc: [
+        "https://www.google.com/recaptcha/",
+        "https://recaptcha.google.com/recaptcha/"
+      ],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"]
+    }
+  }
+}));
+app.use(express.json());  
+
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "script-src 'self' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ 'unsafe-inline'; " +
+    "frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' https://fonts.gstatic.com;"
+  );
+  next();
+});
 
 /* DATABASE CONNECTION */
 mongoose.connect(process.env.MONGO_URI)
