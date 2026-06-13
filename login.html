@@ -271,6 +271,7 @@
     document.getElementById("signupForm").classList.toggle("active", tab === "signup");
     showMsg("loginMsg", "", "");
     showMsg("signupMsg", "", "");
+    if (typeof grecaptcha !== "undefined") grecaptcha.reset();
   }
 
   function showMsg(id, text, type) {
@@ -284,40 +285,43 @@ async function login() {
   const password = document.getElementById("loginPassword").value;
   const btn = document.querySelector("#loginForm .btn");
 
-  
-  const recaptcha = grecaptcha.getResponse();
-  if (!recaptcha) return showMsg("loginMsg", "Please complete the recaptcha.", "error");
-
   if (!username || !password) return showMsg("loginMsg", "Please fill in all fields.", "error");
+
+  // 👇 Check recaptcha AFTER other validations
+  const recaptcha = grecaptcha.getResponse();
+  if (!recaptcha || recaptcha.length === 0) {
+    return showMsg("loginMsg", "Please tick the I am not a robot box.", "error");
+  }
 
   btn.disabled = true;
   btn.textContent = "Logging in...";
 
-  
   try {
-      const res = await fetch(`${API}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password ,recaptcha})
-      });
+    const res = await fetch(`${API}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password, recaptcha })
+    });
 
-      const data = await res.json();
+    const data = await res.json();
 
-      if (!res.ok) {
-        showMsg("loginMsg", data.message || "Login failed.", "error");
-      } else {
-        localStorage.setItem("token", data.token);
-        showMsg("loginMsg", "Login successful. Redirecting...", "success");
-        setTimeout(() => window.location.href = "/products.html", 1000);
-      }
-
-    } catch (err) {
-      showMsg("loginMsg", "Server error. Is your backend running?", "error");
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Login";
+    if (!res.ok) {
+      showMsg("loginMsg", data.message || "Login failed.", "error");
+      grecaptcha.reset(); // 👈 reset on failure
+    } else {
+      localStorage.setItem("token", data.token);
+      showMsg("loginMsg", "Login successful. Redirecting...", "success");
+      setTimeout(() => window.location.href = "/products.html", 1000);
     }
+
+  } catch (err) {
+    showMsg("loginMsg", "Server error. Is your backend running?", "error");
+    grecaptcha.reset(); // 👈 reset on error
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Login";
   }
+}
 
   async function signup() {
     const username = document.getElementById("signupUsername").value.trim();
