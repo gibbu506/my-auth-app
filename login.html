@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   <meta charset="UTF-8"/>
   <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
   <link rel="manifest" href="/manifest.json"/>
@@ -222,8 +221,7 @@
       <label>Password</label>
       <input type="password" id="loginPassword" placeholder="••••••••"/>
     </div>
-    <div class="g-recaptcha" data-sitekey="6Lc0fx0tAAAAACgudSK7tulDGcESNxd7c4lLBFzb"></div>
-
+    
     <button class="btn" onclick="login()">Login</button>
     <p class="footer-text">No account? <span onclick="switchTab('signup')">Sign up</span></p>
   </div>
@@ -287,11 +285,6 @@ async function login() {
 
   if (!username || !password) return showMsg("loginMsg", "Please fill in all fields.", "error");
 
-  // 👇 Check recaptcha AFTER other validations
-  const recaptcha = grecaptcha.getResponse();
-  if (!recaptcha || recaptcha.length === 0) {
-    return showMsg("loginMsg", "Please tick the I am not a robot box.", "error");
-  }
 
   btn.disabled = true;
   btn.textContent = "Logging in...";
