@@ -123,26 +123,6 @@ app.post("/login", authLimiter, async (req, res) => {
   try {
     const { username, password, "g-recaptcha-response": captcha } = req.body;
 
-    // 1. Check captcha exists
-    if (!captcha) {
-      return res.status(400).json({ message: "Captcha required" });
-    }
-
-    // 2. Verify with Google reCAPTCHA
-    const verify = await axios.post(
-      "https://www.google.com/recaptcha/api/siteverify",
-      null,
-      {
-        params: {
-          secret: process.env.RECAPTCHA_SECRET,
-          response: captcha,
-        },
-      }
-    );
-
-    if (!verify.data.success) {
-      return res.status(400).json({ message: "Captcha failed" });
-    }
 
     // 3. Input validation
     if (typeof username !== "string" || typeof password !== "string") {
