@@ -8,12 +8,11 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const path = require("path");
-const rateLimit = require('express-rate-limit');
+const rateLimit = require("express-rate-limit");
 const cloudinary = require("cloudinary").v2;
 const multer = require("multer");
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const axios = require("axios");
-const helmet =require("helmet");
+const helmet = require("helmet");
 
 const app = express();
 app.set("trust proxy", 1);
@@ -21,22 +20,41 @@ app.set("trust proxy", 1);
 /* MIDDLEWARE */
 app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
-app.use(helmet());
-app.use(express.json());  
-
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://www.google.com/recaptcha/",
+        "https://www.gstatic.com/recaptcha/"
+      ],
+      frameSrc: [
+        "https://www.google.com/recaptcha/",
+        "https://recaptcha.google.com/recaptcha/"
+      ],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+      connectSrc: ["'self'"]
+    }
+  }
+}));
+app.use(express.json());
 
 /* DATABASE CONNECTION */
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.log(err));
 
-  /* CLOUDINARY CONFIG */
+/* CLOUDINARY CONFIG */
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key:    process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
- 
+
 /* MULTER STORAGE */
 const storage = new CloudinaryStorage({
   cloudinary,
@@ -46,9 +64,8 @@ const storage = new CloudinaryStorage({
     transformation:  [{ width: 800, height: 800, crop: "limit", quality: "auto" }]
   }
 });
- 
-const upload = multer({ storage });
 
+const upload = multer({ storage });
 
 /* USER MODEL */
 const User = mongoose.model("User", {
@@ -68,14 +85,10 @@ const Product = mongoose.model("Product", {
   createdAt:   { type: Date, default: Date.now }
 });
 
-/* VERIFY TOKEN MIDDLEWARE */
+/* VERIFY TOKEN */
 function verifyToken(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1] || req.cookies.token;
-
-  if (!token) {
-    return res.status(401).json({ message: "Access denied" });
-  }
-
+  if (!token) return res.status(401).json({ message: "Access denied" });
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     req.user = verified;
@@ -85,7 +98,7 @@ function verifyToken(req, res, next) {
   }
 }
 
-/* VERIFY ADMIN MIDDLEWARE */
+/* VERIFY ADMIN */
 function verifyAdmin(req, res, next) {
   if (req.user.role !== "admin") {
     return res.status(403).json({ message: "Admins only" });
@@ -93,78 +106,98 @@ function verifyAdmin(req, res, next) {
   next();
 }
 
-// General — all routes
+/* RATE LIMITERS */
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,                  // 100 requests per 15 min
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: { message: "Too many requests, slow down." }
 });
 
-// Auth — stricter for login/register
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,                   // 10 attempts per 15 min
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   message: { message: "Too many attempts, try again later." }
 });
+
 app.use(generalLimiter);
 
 /* ─── ROUTES ─── */
 
-/* HOME — serves products page */
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "products.html"));
 });
 
-// Dummy hash used for timing-safe comparison when user is not found.
-// Generated once at startup to avoid per-request overhead.
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "login.html"));
+});
+
+app.get("/login.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "login.html"));
+});
+
+/* REGISTER */
+app.post("/register", authLimiter, async (req, res) => {
+  try {
+    const existing = await User.findOne({ username: req.body.username });
+    if (existing) return res.status(400).json({ message: "Username already taken" });
+
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
+    const user = new User({
+      username: req.body.username,
+      password: hashedPassword,
+      email:    req.body.email,
+      phone:    req.body.phone
+    });
+
+    await user.save();
+    res.json({ message: "User registered" });
+  } catch (err) {
+    console.error("Register error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+/* LOGIN */
 const DUMMY_HASH = bcrypt.hashSync("dummy_password_for_timing", 10);
 
 app.post("/login", authLimiter, async (req, res) => {
   try {
-    const { username, password, "g-recaptcha-response": captcha } = req.body;
+    const { username, password } = req.body;
 
-
-    // 3. Input validation
     if (typeof username !== "string" || typeof password !== "string") {
       return res.status(400).json({ message: "Invalid input" });
     }
 
-    // 4. Find user
     const user = await User.findOne({ username });
 
-    // 5. Timing-safe password check (always runs bcrypt to prevent timing attacks)
     const hashToCompare = user ? user.password : DUMMY_HASH;
     const validPassword = await bcrypt.compare(password, hashToCompare);
 
-    // 6. Reject if user not found or password invalid
     if (!user || !validPassword) {
       return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    // 7. Sign JWT
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
-    // 8. Set cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000
     });
 
-    // 9. Respond — don't leak internal user fields
-    return res.status(200).json({ message: "Login successful" });
+    // Send token so frontend can store in localStorage
+    return res.status(200).json({ message: "Login successful", token });
 
-  } catch (error) {
-    console.error("Login error:", error);
+  } catch (err) {
+    console.error("Login error:", err);
     return res.status(500).json({ message: "Server error" });
   }
 });
-
 
 /* DASHBOARD */
 app.get("/dashboard", verifyToken, async (req, res) => {
@@ -180,20 +213,33 @@ app.get("/products", async (req, res) => {
 
 /* ADD PRODUCT — admin only */
 app.post("/products", verifyToken, verifyAdmin, async (req, res) => {
-  const product = new Product({
-    name:        req.body.name,
-    description: req.body.description,
-    price:       req.body.price,
-    image:       req.body.image
-  });
-  await product.save();
-  res.json({ message: "Product added", product });
+  try {
+    const product = new Product({
+      name:        req.body.name,
+      description: req.body.description,
+      price:       req.body.price,
+      image:       req.body.image
+    });
+    await product.save();
+    res.json({ message: "Product added", product });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to add product" });
+  }
 });
 
 /* DELETE PRODUCT — admin only */
 app.delete("/products/:id", verifyToken, verifyAdmin, async (req, res) => {
   await Product.findByIdAndDelete(req.params.id);
   res.json({ message: "Product deleted" });
+});
+
+/* UPLOAD IMAGE — admin only */
+app.post("/upload", verifyToken, verifyAdmin, upload.single("image"), (req, res) => {
+  console.log("Upload req.file:", JSON.stringify(req.file));
+  if (!req.file) {
+    return res.status(400).json({ message: "No file received" });
+  }
+  res.json({ url: req.file.path });
 });
 
 /* MPESA - GET ACCESS TOKEN */
@@ -264,9 +310,9 @@ app.post("/mpesa/callback", (req, res) => {
     const amount  = body.CallbackMetadata.Item.find(i => i.Name === "Amount")?.Value;
     const phone   = body.CallbackMetadata.Item.find(i => i.Name === "PhoneNumber")?.Value;
     const receipt = body.CallbackMetadata.Item.find(i => i.Name === "MpesaReceiptNumber")?.Value;
-    console.log(`✅ Payment received: KES ${amount} from ${phone} — Receipt: ${receipt}`);
+    console.log(`Payment received: KES ${amount} from ${phone} — Receipt: ${receipt}`);
   } else {
-    console.log("❌ Payment failed:", body?.ResultDesc);
+    console.log("Payment failed:", body?.ResultDesc);
   }
 
   res.json({ ResultCode: 0, ResultDesc: "Accepted" });
@@ -279,13 +325,4 @@ app.use(express.static(__dirname));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});
-
-/* UPLOAD IMAGE */
-app.post("/upload", verifyToken, verifyAdmin, upload.single("image"), (req, res) => {
-  console.log("Upload req.file:", JSON.stringify(req.file));
-  if (!req.file) {
-    return res.status(400).json({ message: "No file received" });
-  }
-  res.json({ url: req.file.path });
 });
