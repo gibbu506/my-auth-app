@@ -143,7 +143,7 @@
       font-weight: 500;
     }
 
-    input, textarea {
+    input, textarea, select {
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -156,10 +156,9 @@
       resize: none;
     }
 
-    input:focus, textarea:focus {
-      border-color: var(--accent);
-    }
+    select option { background: var(--surface); }
 
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
     input::placeholder, textarea::placeholder { color: #333; }
 
     .btn-add {
@@ -246,10 +245,6 @@
       border-radius: 10px;
       background: var(--bg);
       border: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
       flex-shrink: 0;
     }
 
@@ -259,18 +254,15 @@
       font-family: 'Syne', sans-serif;
       font-weight: 700;
       font-size: 15px;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .product-desc {
-      font-size: 13px;
+    .product-meta {
+      font-size: 12px;
       color: var(--muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .product-price {
@@ -305,8 +297,6 @@
       border-radius: 14px;
     }
 
-    .empty-icon { font-size: 36px; margin-bottom: 12px; }
-
     @media (max-width: 640px) {
       nav { padding: 16px 20px; }
       main { padding: 30px 20px; }
@@ -336,25 +326,51 @@
   </div>
 
   <div class="add-form">
-    <div class="form-title">➕ Add New Product</div>
+    <div class="form-title">Add New Product</div>
     <div class="form-grid">
+
       <div class="field">
         <label>Product Name</label>
-        <input type="text" id="prodName" placeholder="e.g. Wireless Headphones"/>
+        <input type="text" id="prodName" placeholder="e.g. Dell Laptop"/>
       </div>
+
       <div class="field">
         <label>Price (KSh)</label>
-        <input type="number" id="prodPrice" placeholder="e.g. 4999" min="0" step="1"/>
+        <input type="number" id="prodPrice" placeholder="e.g. 45000" min="0" step="1"/>
       </div>
+
+      <div class="field">
+        <label>Category</label>
+        <select id="prodCategory">
+          <option value="General">General</option>
+          <option value="Phones & Tablets">Phones & Tablets</option>
+          <option value="TVs & Audio">TVs & Audio</option>
+          <option value="Appliances">Appliances</option>
+          <option value="Health & Beauty">Health & Beauty</option>
+          <option value="Home & Office">Home & Office</option>
+          <option value="Fashion">Fashion</option>
+          <option value="Computing">Computing</option>
+          <option value="Gaming">Gaming</option>
+          <option value="Supermarket">Supermarket</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>YouTube Video URL (optional)</label>
+        <input type="url" id="prodVideo" placeholder="https://www.youtube.com/watch?v=..."/>
+      </div>
+
       <div class="field full">
         <label>Description</label>
         <textarea id="prodDesc" rows="2" placeholder="Short product description..."></textarea>
       </div>
+
       <div class="field full">
         <label>Product Image</label>
         <input type="file" id="prodImageFile" accept="image/*" onchange="previewImage(this)"/>
         <img id="imagePreview" style="margin-top:10px; max-height:120px; border-radius:8px; display:none;"/>
       </div>
+
     </div>
     <button class="btn-add" onclick="addProduct()">Add Product</button>
     <div id="addMsg" class="msg"></div>
@@ -363,7 +379,7 @@
   <div class="section-title">All Products</div>
   <div id="loadingProducts">
     <div class="spinner"></div>
-    Fetching products...
+    Loading...
   </div>
   <div class="product-list" id="productList"></div>
 </main>
@@ -395,11 +411,7 @@
       list.innerHTML = "";
 
       if (products.length === 0) {
-        list.innerHTML = `
-          <div class="empty">
-            <div class="empty-icon">📦</div>
-            No products yet. Add your first one above.
-          </div>`;
+        list.innerHTML = `<div class="empty">No products yet. Add your first one above.</div>`;
         return;
       }
 
@@ -410,10 +422,10 @@
         row.innerHTML = `
           ${p.image
             ? `<img class="product-img" src="${p.image}" alt="${p.name}" onerror="this.style.display='none'">`
-            : `<div class="product-img-placeholder">📦</div>`}
+            : `<div class="product-img-placeholder"></div>`}
           <div class="product-info">
             <div class="product-name">${p.name}</div>
-            <div class="product-desc">${p.description || "No description"}</div>
+            <div class="product-meta">${p.category || "General"} ${p.video ? "· Has video" : ""}</div>
           </div>
           <div class="product-price">KSh ${Number(p.price).toFixed(0)}</div>
           <button class="btn-delete" onclick="deleteProduct('${p._id}')">Delete</button>
@@ -423,17 +435,19 @@
 
     } catch (err) {
       document.getElementById("loadingProducts").innerHTML =
-        `<div style="color:var(--error);font-size:14px;">⚠️ Could not load products. Is your backend running?</div>`;
+        `<div style="color:var(--error);font-size:14px;">Could not load products.</div>`;
     }
   }
 
   async function addProduct() {
-    const name  = document.getElementById("prodName").value.trim();
-    const price = document.getElementById("prodPrice").value;
-    const desc  = document.getElementById("prodDesc").value.trim();
-    const file  = document.getElementById("prodImageFile").files[0];
-    const token = localStorage.getItem("token");
-    const btn   = document.querySelector(".btn-add");
+    const name     = document.getElementById("prodName").value.trim();
+    const price    = document.getElementById("prodPrice").value;
+    const desc     = document.getElementById("prodDesc").value.trim();
+    const category = document.getElementById("prodCategory").value;
+    const video    = document.getElementById("prodVideo").value.trim();
+    const file     = document.getElementById("prodImageFile").files[0];
+    const token    = localStorage.getItem("token");
+    const btn      = document.querySelector(".btn-add");
 
     if (!name || !price) return showMsg("addMsg", "Name and price are required.", "error");
     if (!token) return window.location.href = "/login.html";
@@ -454,7 +468,7 @@
         });
 
         const uploadData = await uploadRes.json();
-        imageUrl = uploadData.url;
+        imageUrl = uploadData.url || "";
       }
 
       btn.textContent = "Adding...";
@@ -464,7 +478,14 @@
           "Content-Type": "application/json",
           authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ name, price: parseFloat(price), description: desc, image: imageUrl })
+        body: JSON.stringify({
+          name,
+          price:       parseFloat(price),
+          description: desc,
+          category,
+          video,
+          image:       imageUrl
+        })
       });
 
       const data = await res.json();
@@ -472,10 +493,12 @@
       if (!res.ok) {
         showMsg("addMsg", data.message || "Failed to add product.", "error");
       } else {
-        showMsg("addMsg", `"${name}" added successfully!`, "success");
-        document.getElementById("prodName").value  = "";
-        document.getElementById("prodPrice").value = "";
-        document.getElementById("prodDesc").value  = "";
+        showMsg("addMsg", `${name} added successfully.`, "success");
+        document.getElementById("prodName").value     = "";
+        document.getElementById("prodPrice").value    = "";
+        document.getElementById("prodDesc").value     = "";
+        document.getElementById("prodVideo").value    = "";
+        document.getElementById("prodCategory").value = "General";
         document.getElementById("prodImageFile").value = "";
         document.getElementById("imagePreview").style.display = "none";
         loadProducts();
@@ -514,8 +537,7 @@
       if (res.ok) {
         const row = document.getElementById(`product-${id}`);
         row.style.opacity = "0";
-        row.style.transform = "translateX(20px)";
-        row.style.transition = "all 0.3s ease";
+        row.style.transition = "opacity 0.3s ease";
         setTimeout(() => { row.remove(); loadProducts(); }, 300);
       }
 
@@ -535,7 +557,7 @@
     const data = await res.json();
 
     if (data.user?.role !== "admin") {
-      alert("Admins only!");
+      alert("Admins only.");
       return window.location.href = "/login.html";
     }
 
