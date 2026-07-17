@@ -28,16 +28,20 @@ app.use(helmet({
         "'self'",
         "'unsafe-inline'",
         "https://www.google.com/recaptcha/",
-        "https://www.gstatic.com/recaptcha/"
+        "https://www.gstatic.com/recaptcha/",
+        "https://embed.tawk.to",
+        "https://cdn.tawk.to"
       ],
       frameSrc: [
         "https://www.google.com/recaptcha/",
-        "https://recaptcha.google.com/recaptcha/"
+        "https://recaptcha.google.com/recaptcha/",
+        "https://www.youtube.com",
+        "https://embed.tawk.to"
       ],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
-      connectSrc: ["'self'"]
+      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://*.tawk.to"],
+      connectSrc: ["'self'", "https://*.tawk.to", "wss://*.tawk.to"]
     }
   }
 }));
@@ -68,6 +72,15 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 /* USER MODEL */
+const User = mongoose.model("User", {
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  email:    { type: String },
+  phone:    { type: String },
+  role:     { type: String, default: "user" }
+});
+
+/* PRODUCT MODEL */
 const Product = mongoose.model("Product", {
   name:        { type: String, required: true },
   description: { type: String },
@@ -77,8 +90,6 @@ const Product = mongoose.model("Product", {
   category:    { type: String, default: "General" },
   createdAt:   { type: Date, default: Date.now }
 });
-
-/* PRODUCT MODEL */
 
 /* VERIFY TOKEN */
 function verifyToken(req, res, next) {
@@ -185,7 +196,6 @@ app.post("/login", authLimiter, async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000
     });
 
-    // Send token so frontend can store in localStorage
     return res.status(200).json({ message: "Login successful", token });
 
   } catch (err) {
@@ -213,7 +223,9 @@ app.post("/products", verifyToken, verifyAdmin, async (req, res) => {
       name:        req.body.name,
       description: req.body.description,
       price:       req.body.price,
-      image:       req.body.image
+      image:       req.body.image,
+      video:       req.body.video,
+      category:    req.body.category || "General"
     });
     await product.save();
     res.json({ message: "Product added", product });
