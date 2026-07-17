@@ -79,13 +79,6 @@ const Product = mongoose.model("Product", {
 });
 
 /* PRODUCT MODEL */
-const Product = mongoose.model("Product", {
-  name:        { type: String, required: true },
-  description: { type: String },
-  price:       { type: Number, required: true },
-  image:       { type: String },
-  createdAt:   { type: Date, default: Date.now }
-});
 
 /* VERIFY TOKEN */
 function verifyToken(req, res, next) {
