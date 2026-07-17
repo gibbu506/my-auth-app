@@ -1,4 +1,4 @@
-const CACHE = "yourapp-v1";
+const CACHE = "yourapp-v2";  // 👈 change v1 to v2
 const ASSETS = [
   "/",
   "/login.html",
@@ -7,14 +7,22 @@ const ASSETS = [
   "/admin.html"
 ];
 
-// Install — cache all pages
 self.addEventListener("install", e => {
   e.waitUntil(
     caches.open(CACHE).then(cache => cache.addAll(ASSETS))
   );
+  self.skipWaiting(); // 👈 add this
 });
 
-// Fetch — serve from cache if offline
+self.addEventListener("activate", e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim(); // 👈 add this
+});
+
 self.addEventListener("fetch", e => {
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
