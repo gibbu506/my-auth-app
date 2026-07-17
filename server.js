@@ -68,12 +68,14 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage });
 
 /* USER MODEL */
-const User = mongoose.model("User", {
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  email:    { type: String },
-  phone:    { type: String },
-  role:     { type: String, default: "user" }
+const Product = mongoose.model("Product", {
+  name:        { type: String, required: true },
+  description: { type: String },
+  price:       { type: Number, required: true },
+  image:       { type: String },
+  video:       { type: String },
+  category:    { type: String, default: "General" },
+  createdAt:   { type: Date, default: Date.now }
 });
 
 /* PRODUCT MODEL */
