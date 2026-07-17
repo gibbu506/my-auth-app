@@ -19,32 +19,58 @@ app.set("trust proxy", 1);
 
 /* MIDDLEWARE */
 app.use(cookieParser());
-app.use(cors({ origin: true, credentials: true }));
-app.use(helmet({
-  contentSecurityPolicy: {
+app.use(cors({origin: true, credentials: true }));
+app.use(helmet({contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: [
         "'self'",
         "'unsafe-inline'",
+        "'unsafe-hashes'",
         "https://www.google.com/recaptcha/",
         "https://www.gstatic.com/recaptcha/",
         "https://embed.tawk.to",
-        "https://cdn.tawk.to"
+        "https://cdn.tawk.to",
+        "https://*.tawk.to"
       ],
+      scriptSrcAttr: ["'unsafe-inline'"],
       frameSrc: [
         "https://www.google.com/recaptcha/",
         "https://recaptcha.google.com/recaptcha/",
         "https://www.youtube.com",
-        "https://embed.tawk.to"
+        "https://embed.tawk.to",
+        "https://*.tawk.to"
       ],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://*.tawk.to"],
-      connectSrc: ["'self'", "https://*.tawk.to", "wss://*.tawk.to"]
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://fonts.googleapis.com",
+        "https://*.tawk.to"
+      ],
+      fontSrc: [
+        "'self'",
+        "https://fonts.gstatic.com",
+        "https://*.tawk.to"
+      ],
+      imgSrc: [
+        "'self'",
+        "data:",
+        "https://res.cloudinary.com",
+        "https://*.tawk.to",
+        "blob:"
+      ],
+      connectSrc: [
+        "'self'",
+        "https://*.tawk.to",
+        "wss://*.tawk.to",
+        "https://fonts.googleapis.com",
+        "https://fonts.gstatic.com"
+      ],
+      workerSrc: ["'self'", "blob:"]
     }
   }
 }));
+ 
 app.use(express.json());
 
 /* DATABASE CONNECTION */
