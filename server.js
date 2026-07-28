@@ -26,6 +26,25 @@ app.use(helmet({
  
 app.use(express.json());
 
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-hashes' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://*.tawk.to https://cdn.tawk.to",
+      "script-src-attr 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.tawk.to",
+      "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.tawk.to",
+      "font-src 'self' https://fonts.gstatic.com https://*.tawk.to",
+      "img-src 'self' data: blob: https://res.cloudinary.com https://*.tawk.to",
+      "frame-src https://www.youtube.com https://*.tawk.to https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/",
+      "connect-src 'self' https://*.tawk.to wss://*.tawk.to https://fonts.googleapis.com https://fonts.gstatic.com",
+      "worker-src 'self' blob:"
+    ].join("; ")
+  );
+  next();
+});
+
 /* DATABASE CONNECTION */
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB connected"))
